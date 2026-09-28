@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>ASCII Voxel World 1024 // Photorealistic Shading</title>
+  <title>The Mansion of the Unholy Vows // Castle Valak</title>
   <style>
     * {
       box-sizing: border-box;
@@ -20,10 +20,11 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #559cf0;
+      background-color: #050811;
       touch-action: none;
       position: fixed;
       font-family: 'Courier New', Courier, monospace;
+      color: #9cb3d9;
     }
 
     #game-canvas {
@@ -33,1027 +34,644 @@
       touch-action: none;
     }
 
-    /* Daytime HUD */
-    #hud {
+    /* Gothic Blueprint Top Header */
+    #header-hud {
       position: absolute;
       top: 8px;
       left: 10px;
-      color: #0f172a;
-      background: rgba(255, 255, 255, 0.82);
-      border: 1px solid rgba(255, 255, 255, 0.95);
-      padding: 4px 8px;
-      border-radius: 6px;
-      font-size: 11px;
-      font-weight: bold;
-      pointer-events: none;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-      z-index: 15;
-      line-height: 1.35;
-    }
-
-    /* Radar Minimap */
-    #minimap-card {
-      position: absolute;
-      top: 8px;
       right: 10px;
-      background: rgba(255, 255, 255, 0.88);
-      border: 1.5px solid rgba(15, 23, 42, 0.2);
-      padding: 5px 8px;
-      border-radius: 6px;
-      color: #0284c7;
-      font-size: 9px;
-      font-family: monospace;
-      font-weight: bold;
-      line-height: 1.05;
-      white-space: pre;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
       pointer-events: none;
-      z-index: 15;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      z-index: 20;
+      text-shadow: 0 0 4px #000;
     }
 
-    #target-info {
-      position: absolute;
-      top: 54px;
-      left: 10px;
-      color: #854d0e;
-      background: rgba(254, 240, 138, 0.92);
-      border: 1px solid rgba(202, 138, 4, 0.5);
-      padding: 3px 8px;
+    .blueprint-panel {
+      background: rgba(6, 10, 22, 0.85);
+      border: 1px solid rgba(80, 140, 220, 0.4);
       border-radius: 4px;
-      font-size: 10px;
-      font-weight: bold;
-      pointer-events: none;
-      z-index: 15;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+      padding: 6px 10px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.7);
     }
 
-    #reticle {
+    .title-banner {
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      color: #e2e8f0;
+      font-weight: bold;
+    }
+
+    .subtitle-banner {
+      font-size: 9px;
+      color: #60a5fa;
+      letter-spacing: 0.5px;
+    }
+
+    /* Live Streamer Phone HUD Overlay */
+    #stream-hud {
       position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: #ffffff;
-      text-shadow: 0 0 3px #000, 0 0 6px rgba(0,0,0,0.85);
-      font-size: 18px;
-      font-weight: bold;
+      top: 60px;
+      left: 10px;
+      width: 175px;
+      background: rgba(10, 15, 30, 0.82);
+      border: 1px solid rgba(239, 68, 68, 0.5);
+      border-radius: 6px;
+      padding: 6px;
       pointer-events: none;
-      z-index: 10;
-      line-height: 1;
+      z-index: 20;
+      font-size: 9px;
     }
 
-    /* Navigation & Action Buttons */
-    .nav-btn {
-      width: 46px;
-      height: 46px;
-      background: rgba(15, 23, 42, 0.76);
-      border: 1.5px solid rgba(255, 255, 255, 0.45);
-      border-radius: 8px;
-      color: #f8fafc;
-      font-size: 15px;
-      font-weight: bold;
-      display: flex;
+    .live-badge {
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      touch-action: none;
-      cursor: pointer;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.35);
-      transition: background 0.1s, transform 0.05s;
-    }
-    .nav-btn:active, .nav-btn.active {
-      background: rgba(2, 132, 199, 0.88);
-      border-color: #38bdf8;
-      transform: scale(0.92);
-    }
-
-    #dpad-cluster {
-      position: absolute;
-      bottom: 68px;
-      left: 12px;
-      display: grid;
-      grid-template-columns: repeat(3, 46px);
-      grid-template-rows: repeat(3, 46px);
-      gap: 5px;
-      z-index: 25;
-    }
-
-    #camera-cluster {
-      position: absolute;
-      bottom: 126px;
-      right: 12px;
-      display: grid;
-      grid-template-columns: repeat(3, 44px);
-      grid-template-rows: repeat(2, 44px);
-      gap: 5px;
-      z-index: 25;
-    }
-
-    #action-cluster {
-      position: absolute;
-      bottom: 68px;
-      right: 12px;
-      display: flex;
-      gap: 7px;
-      z-index: 25;
-    }
-    .action-btn {
-      width: 58px;
-      height: 48px;
-      border-radius: 8px;
-      font-size: 10px;
-      font-weight: bold;
+      gap: 4px;
+      background: #dc2626;
       color: #fff;
+      font-weight: bold;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-size: 8px;
+    }
+    .live-dot {
+      width: 6px;
+      height: 6px;
+      background: #fff;
+      border-radius: 50%;
+      animation: pulse 1s infinite alternate;
+    }
+    @keyframes pulse { from { opacity: 0.3; } to { opacity: 1; } }
+
+    #chat-box {
+      margin-top: 5px;
+      height: 62px;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      touch-action: none;
-      cursor: pointer;
-      border: 1.5px solid rgba(255, 255, 255, 0.4);
-      box-shadow: 0 3px 10px rgba(0,0,0,0.35);
+      justify-content: flex-end;
+      gap: 3px;
+      color: #cbd5e1;
+      font-size: 8.5px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 4px;
     }
-    .action-btn:active {
-      transform: scale(0.93);
+    .chat-msg {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    #btn-mine { background: rgba(220, 38, 38, 0.82); border-color: #f87171; }
-    #btn-build { background: rgba(16, 185, 129, 0.82); border-color: #34d399; }
-    #btn-jump { background: rgba(2, 132, 199, 0.82); border-color: #60a5fa; }
+    .chat-user { color: #38bdf8; font-weight: bold; }
+    .chat-warn { color: #f87171; font-weight: bold; }
 
-    #hotbar {
+    /* Keys & Objectives Checklist */
+    #objective-hud {
       position: absolute;
-      bottom: 10px;
+      top: 60px;
+      right: 10px;
+      background: rgba(6, 10, 22, 0.85);
+      border: 1px solid rgba(234, 179, 8, 0.45);
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 9.5px;
+      pointer-events: none;
+      z-index: 20;
+      text-shadow: 0 0 3px #000;
+    }
+    .key-slot {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 3px 0;
+      color: #94a3b8;
+    }
+    .key-slot.found {
+      color: #facc15;
+      font-weight: bold;
+    }
+
+    /* Panic & Heartbeat Meter */
+    #panic-bar-container {
+      width: 100px;
+      height: 6px;
+      background: #1e293b;
+      border: 1px solid #475569;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    #panic-fill {
+      width: 0%;
+      height: 100%;
+      background: #ef4444;
+      transition: width 0.3s;
+    }
+
+    /* Screen Static & Vignette */
+    #vignette-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      box-shadow: inset 0 0 90px rgba(0,0,0,0.88);
+      z-index: 10;
+    }
+    #static-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.05;
+      z-index: 11;
+      background: repeating-radial-gradient(#fff 0 0.0001%, #000 0 0.0002%);
+    }
+
+    /* Interaction Prompt */
+    #interact-prompt {
+      position: absolute;
+      bottom: 125px;
       left: 50%;
       transform: translateX(-50%);
-      display: flex;
-      gap: 5px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1.5px solid rgba(255, 255, 255, 0.35);
-      padding: 4px;
-      border-radius: 8px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid #facc15;
+      padding: 5px 12px;
+      border-radius: 4px;
+      color: #fef08a;
+      font-size: 10.5px;
+      font-weight: bold;
+      pointer-events: none;
       z-index: 25;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: none;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
+      text-align: center;
     }
-    .hotbar-slot {
-      width: 42px;
-      height: 44px;
+
+    /* Mobile Controls */
+    .touch-btn {
+      position: absolute;
+      border-radius: 50%;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: rgba(255, 255, 255, 0.08);
-      border: 2px solid transparent;
-      border-radius: 5px;
-      color: #e2e8f0;
-      font-size: 8px;
+      color: #fff;
+      font-size: 10px;
+      font-weight: bold;
+      touch-action: none;
+      cursor: pointer;
+      z-index: 30;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+      border: 1.5px solid rgba(255,255,255,0.3);
+    }
+    .touch-btn:active { transform: scale(0.92); }
+
+    #btn-interact {
+      bottom: 24px;
+      right: 20px;
+      width: 66px;
+      height: 66px;
+      background: rgba(234, 179, 8, 0.75);
+      border-color: #facc15;
+    }
+    #btn-felix {
+      bottom: 98px;
+      right: 28px;
+      width: 52px;
+      height: 52px;
+      background: rgba(56, 189, 248, 0.75);
+      border-color: #38bdf8;
+    }
+    #btn-flash {
+      bottom: 24px;
+      right: 96px;
+      width: 54px;
+      height: 54px;
+      background: rgba(147, 51, 234, 0.75);
+      border-color: #c084fc;
+    }
+
+    /* Center Overlay Messages (Game Over / Escape) */
+    #modal-screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(4, 7, 15, 0.94);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 50;
+      padding: 20px;
+      text-align: center;
+    }
+    #modal-title {
+      font-size: 20px;
+      font-weight: bold;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+    #modal-desc {
+      font-size: 11px;
+      max-width: 380px;
+      line-height: 1.6;
+      color: #cbd5e1;
+      margin-bottom: 20px;
+    }
+    #btn-start {
+      background: #dc2626;
+      border: 1.5px solid #f87171;
+      color: #fff;
+      padding: 10px 22px;
+      font-size: 12px;
+      font-family: inherit;
       font-weight: bold;
       cursor: pointer;
-      touch-action: manipulation;
-    }
-    .hotbar-slot.active {
-      border-color: #facc15;
-      background: rgba(250, 204, 21, 0.28);
-      color: #fff;
-    }
-    .hotbar-char {
-      font-size: 14px;
-      margin-bottom: 1px;
-      font-weight: bold;
+      border-radius: 4px;
+      letter-spacing: 1px;
+      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
     }
   </style>
 </head>
 <body>
-  <div id="hud">
-    <div id="hud-stats">ATMOSPHERIC 1024 // FPS: --</div>
-    <div id="hud-pos">POS: (0, 0) | ALT: 0m</div>
-  </div>
-  <div id="minimap-card">RADAR
-[ + ]</div>
-  <div id="target-info">TARGET: NONE</div>
-  <div id="reticle">+</div>
+  <!-- Atmospheric Overlays -->
+  <div id="vignette-overlay"></div>
+  <div id="static-overlay"></div>
 
-  <!-- Directional D-Pad Cluster (Left) -->
-  <div id="dpad-cluster">
-    <div></div>
-    <div class="nav-btn" data-key="Forward" title="Forward">▲</div>
-    <div></div>
-    <div class="nav-btn" data-key="StrafeLeft" title="Strafe Left">◀</div>
-    <div class="nav-btn" data-key="Backward" title="Backward">▼</div>
-    <div class="nav-btn" data-key="StrafeRight" title="Strafe Right">▶</div>
+  <!-- Top Blueprints HUD -->
+  <div id="header-hud">
+    <div class="blueprint-panel">
+      <div class="title-banner">CASTLE VALAK // DEMONIC STRONGHOLD</div>
+      <div class="subtitle-banner" id="room-name">LOCATION: THE ENTRANCE HALL</div>
+    </div>
+    <div class="blueprint-panel" style="text-align:right;">
+      <div style="font-size:9px; color:#f87171; font-weight:bold;">CURSE LEVEL: 9/10</div>
+      <div style="font-size:8px; color:#94a3b8;">PANIC:</div>
+      <div id="panic-bar-container"><div id="panic-fill"></div></div>
+    </div>
   </div>
 
-  <!-- Camera Turn/Tilt Cluster (Right) -->
-  <div id="camera-cluster">
-    <div class="nav-btn" data-key="LookUp" title="Look Up">⤒</div>
-    <div></div>
-    <div class="nav-btn" data-key="LookDown" title="Look Down">⤓</div>
-    <div class="nav-btn" data-key="TurnLeft" title="Turn Left">↶</div>
-    <div></div>
-    <div class="nav-btn" data-key="TurnRight" title="Turn Right">↷</div>
+  <!-- Blogger Live Stream UI -->
+  <div id="stream-hud">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <span class="live-badge"><span class="live-dot"></span>LIVE</span>
+      <span style="color:#ef4444; font-weight:bold;" id="viewer-count">👁 3,842</span>
+      <span style="color:#38bdf8;" id="battery-level">⚡ 88%</span>
+    </div>
+    <div id="chat-box">
+      <div class="chat-msg"><span class="chat-user">GhostBuster:</span> BRO WHERE ARE YOU?!</div>
+      <div class="chat-msg"><span class="chat-user">Mimi_x:</span> The cat is following you omg 🐈</div>
+      <div class="chat-msg"><span class="chat-warn">HauntAlert:</span> FIND THE 3 KEYS AND GET OUT!</div>
+    </div>
   </div>
 
-  <!-- Action Cluster -->
-  <div id="action-cluster">
-    <div id="btn-jump" class="action-btn"><span>▲</span>JUMP</div>
-    <div id="btn-mine" class="action-btn"><span>⛏</span>MINE</div>
-    <div id="btn-build" class="action-btn"><span>🧱</span>BUILD</div>
+  <!-- Objectives & Key Registry -->
+  <div id="objective-hud">
+    <div style="font-size:8px; color:#eab308; font-weight:bold; margin-bottom:3px;">UNHOLY VOW SEALS [KEYS]</div>
+    <div class="key-slot" id="slot-key1"><span>🗝</span> [1] Archivist's Key</div>
+    <div class="key-slot" id="slot-key2"><span>🗝</span> [2] Chapel Altar Key</div>
+    <div class="key-slot" id="slot-key3"><span>🗝</span> [3] Abbess's Vow Key</div>
   </div>
 
-  <!-- Block Hotbar -->
-  <div id="hotbar">
-    <div class="hotbar-slot active" data-mat="3"><span class="hotbar-char" style="color:#cbd5e1">#</span>STONE<span style="font-size:7px">[1]</span></div>
-    <div class="hotbar-slot" data-mat="4"><span class="hotbar-char" style="color:#f59e0b">=</span>WOOD<span style="font-size:7px">[2]</span></div>
-    <div class="hotbar-slot" data-mat="6"><span class="hotbar-char" style="color:#f87171">■</span>BRICK<span style="font-size:7px">[3]</span></div>
-    <div class="hotbar-slot" data-mat="5"><span class="hotbar-char" style="color:#4ade80">*</span>LEAF<span style="font-size:7px">[4]</span></div>
-    <div class="hotbar-slot" data-mat="2"><span class="hotbar-char" style="color:#a3e635">w</span>GRASS<span style="font-size:7px">[5]</span></div>
-    <div class="hotbar-slot" data-mat="7"><span class="hotbar-char" style="color:#fde047">☼</span>LIGHT<span style="font-size:7px">[6]</span></div>
+  <div id="interact-prompt">PRESS [E] / TAP [INTERACT]</div>
+
+  <!-- Touch Navigation Controls -->
+  <div id="btn-interact" class="touch-btn"><span>🗝</span>SEARCH</div>
+  <div id="btn-felix" class="touch-btn"><span>🐈</span>FELIX</div>
+  <div id="btn-flash" class="touch-btn"><span>⚡</span>STUN</div>
+
+  <!-- Start / Game Over Screen -->
+  <div id="modal-screen">
+    <div id="modal-title" style="color:#ef4444;">THE MANSION OF THE UNHOLY VOWS</div>
+    <div id="modal-desc">
+      You are <b>User-1</b>, a youthful streamer trapped inside Castle Valak.
+      <br><br>
+      <b>VALAK THE UNHOLY NUN</b> stalks the corridors with her spectral scythe.
+      Listen to <b>Felix the Phantom Cat</b>—he will hiss when she is near!
+      <br><br>
+      Locate the <b>3 Unholy Keys</b> across the Chapel, Library, and Abbess Chambers to unlock the Main Entrance and escape alive.
+    </div>
+    <button id="btn-start">BEGIN STREAM // ENTER MANSION</button>
   </div>
 
   <canvas id="game-canvas"></canvas>
 
   <script>
     /* ==========================================================================
-       1. ATMOSPHERIC, SHADING & MAP CONSTANTS
+       1. WEB AUDIO PROCEDURAL SYNTHESIZER (No External Assets)
        ========================================================================== */
-    const MAP_SIZE = 1024;
-    const MAP_MASK = MAP_SIZE - 1;
-    const WATER_LEVEL = 30.0;
-    const WIDE_FOV = 1.48;             // ~85° Ultra-wide panoramic lens
-    const MAX_RAY_DIST = 340.0;
-    const REACH_DISTANCE = 18.0;
+    let audioCtx = null;
 
-    // Perceptually ordered 16-level typographical density ramp
-    const DENSITY_RAMP = " .'`,:;!~+*?#%&8@█";
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+    }
 
-    // Atmosphere color parameters
-    const SKY_ZENITH  = [55, 140, 245];
-    const SKY_HORIZON = [190, 222, 252];
-    const DAY_FOG     = [175, 212, 248];
+    // Low-frequency accelerating heartbeat
+    function playHeartbeat(panic) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(65 + panic * 40, audioCtx.currentTime);
+      osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.12);
+      gain.gain.setValueAtTime(0.35 + panic * 0.45, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.14);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 0.15);
+    }
 
-    // Sun vector pointing UP into the sky toward the light source
-    const SUN_VEC = normalizeVector({ x: 0.38, y: 0.48, z: 0.78 });
+    // Felix the Phantom Cat: Warning Hiss & Guidance Meow
+    function playFelixSound(isHiss = false) {
+      if (!audioCtx) return;
+      if (isHiss) {
+        // High filtered noise hiss
+        const bufferSize = audioCtx.sampleRate * 0.4;
+        const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+        const noise = audioCtx.createBufferSource();
+        noise.buffer = buffer;
+        const filter = audioCtx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 3200;
+        const gain = audioCtx.createGain();
+        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.38);
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(audioCtx.destination);
+        noise.start();
+      } else {
+        // Ghostly caterwaul / meow
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(650, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.18);
+        osc.frequency.exponentialRampToValueAtTime(520, audioCtx.currentTime + 0.45);
+        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.46);
+      }
+    }
 
-    // Voxel Material IDs
-    const MAT_WATER = 0;
-    const MAT_DIRT  = 1;
-    const MAT_GRASS = 2;
-    const MAT_STONE = 3;
-    const MAT_WOOD  = 4;
-    const MAT_LEAF  = 5;
-    const MAT_BRICK = 6;
-    const MAT_LIGHT = 7;
-    const MAT_SAND  = 8;
-    const MAT_SNOW  = 9;
+    // Terrifying Valak Presence Stinger / Shriek
+    function playValakShriek() {
+      if (!audioCtx) return;
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc1.type = 'sawtooth';
+      osc2.type = 'square';
+      osc1.frequency.setValueAtTime(850, audioCtx.currentTime);
+      osc1.frequency.linearRampToValueAtTime(220, audioCtx.currentTime + 0.8);
+      osc2.frequency.setValueAtTime(890, audioCtx.currentTime);
+      osc2.frequency.linearRampToValueAtTime(200, audioCtx.currentTime + 0.8);
+      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.85);
+      osc1.connect(gain);
+      osc2.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc1.start(); osc2.start();
+      osc1.stop(audioCtx.currentTime + 0.9);
+      osc2.stop(audioCtx.currentTime + 0.9);
+    }
 
-    const MATERIALS = {
-      [MAT_WATER]: { name: "Water",       base: [26, 130, 220] },
-      [MAT_DIRT]:  { name: "Dirt",        base: [142, 94, 54]  },
-      [MAT_GRASS]: { name: "Grass",       base: [60, 168, 48]  },
-      [MAT_STONE]: { name: "Stone",       base: [136, 142, 154] },
-      [MAT_WOOD]:  { name: "Wood Planks", base: [180, 120, 68] },
-      [MAT_LEAF]:  { name: "Leaves",      base: [40, 162, 46]  },
-      [MAT_BRICK]: { name: "Brick",       base: [190, 78, 62]  },
-      [MAT_LIGHT]: { name: "Glowstone",   base: [255, 235, 95] },
-      [MAT_SAND]:  { name: "Sand",        base: [230, 208, 136] },
-      [MAT_SNOW]:  { name: "Snow Cap",    base: [245, 250, 255] }
-    };
+    // Key chime / pickup sound
+    function playChime() {
+      if (!audioCtx) return;
+      [523, 659, 783, 1046].forEach((freq, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle';
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.18, audioCtx.currentTime + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.08 + 0.4);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(audioCtx.currentTime + idx * 0.08);
+        osc.stop(audioCtx.currentTime + idx * 0.08 + 0.45);
+      });
+    }
 
     /* ==========================================================================
-       2. CANVAS & TEXT BUFFER PIPELINE
+       2. MANSION ARCHITECTURE & REFERENCE MAP (Castle Valak)
+       ========================================================================== */
+    // Tile Types
+    const T_FLOOR = 0;
+    const T_WALL  = 1;
+    const T_PIT   = 2;  // Spectral Pit (Damage / Panic)
+    const T_FOUNT = 3;  // Blood Fountain
+    const T_CROSS = 4;  // Desecrated Altar Cross
+    const T_BOOK  = 5;  // Library Bookshelves
+    const T_GATE  = 6;  // Unholy Ward Grand Gate (Exit)
+
+    const GRID_W = 42;
+    const GRID_H = 42;
+    const mansionMap = new Uint8Array(GRID_W * GRID_H);
+
+    // Mansion Rooms Definition (Directly from Ref 1 & 2)
+    const ROOMS = [
+      { id: 1, name: "THE ENTRANCE HALL", bounds: [16, 28, 26, 40] },
+      { id: 2, name: "THE DESECRATED CHAPEL", bounds: [3, 4, 16, 22] },
+      { id: 3, name: "THE LIBRARY OF FORBIDDEN TEXTS", bounds: [26, 4, 38, 22] },
+      { id: 4, name: "THE ABBESS'S CHAMBERS", bounds: [28, 26, 39, 39] },
+      { id: 5, name: "THE CATACOMBS & OSSUARY", bounds: [3, 26, 14, 39] }
+    ];
+
+    function buildMansion() {
+      mansionMap.fill(T_WALL);
+
+      // Carve out rooms
+      ROOMS.forEach(r => {
+        const [x1, y1, x2, y2] = r.bounds;
+        for (let y = y1; y <= y2; y++) {
+          for (let x = x1; x <= x2; x++) {
+            if (x === x1 || x === x2 || y === y1 || y === y2) {
+              mansionMap[y * GRID_W + x] = T_WALL;
+            } else {
+              mansionMap[y * GRID_W + x] = T_FLOOR;
+            }
+          }
+        }
+      });
+
+      // Carve interconnecting hallways
+      function carveH(x1, x2, y) {
+        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
+          mansionMap[y * GRID_W + x] = T_FLOOR;
+          mansionMap[(y-1) * GRID_W + x] = T_FLOOR;
+        }
+      }
+      function carveV(y1, y2, x) {
+        for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
+          mansionMap[y * GRID_W + x] = T_FLOOR;
+          mansionMap[y * GRID_W + (x+1)] = T_FLOOR;
+        }
+      }
+
+      // Hallway: Entrance -> Chapel & Library
+      carveV(22, 28, 21);
+      carveH(10, 32, 23);
+      carveV(18, 23, 10); // to Chapel
+      carveV(18, 23, 32); // to Library
+      carveH(14, 16, 33); // Entrance -> Catacombs
+      carveH(26, 28, 33); // Entrance -> Abbess Chambers
+
+      // Add Key Props & Traps from Reference sheets:
+      // Entrance: Main Locked Exit Gate & Blood Fountain
+      mansionMap[40 * GRID_W + 21] = T_GATE;
+      mansionMap[34 * GRID_W + 21] = T_FOUNT;
+
+      // Chapel: Desecrated Altars & Spectral Pits
+      mansionMap[6 * GRID_W + 9] = T_CROSS;
+      mansionMap[7 * GRID_W + 9] = T_CROSS;
+      mansionMap[12 * GRID_W + 8] = T_PIT;
+      mansionMap[12 * GRID_W + 11] = T_PIT;
+
+      // Library: Towering bookshelves
+      for (let y = 7; y <= 19; y += 3) {
+        for (let x = 29; x <= 35; x += 3) {
+          mansionMap[y * GRID_W + x] = T_BOOK;
+          mansionMap[(y+1) * GRID_W + x] = T_BOOK;
+        }
+      }
+
+      // Catacombs: Bone Pits & Skeletons
+      mansionMap[31 * GRID_W + 8] = T_PIT;
+      mansionMap[34 * GRID_W + 10] = T_PIT;
+    }
+
+    /* ==========================================================================
+       3. CHARACTERS & SURVIVAL ENTITIES
+       ========================================================================== */
+    // Protagonist: User-1 (Youthful Blogger)
+    const player = {
+      x: 21.5,
+      y: 37.0,
+      angle: -Math.PI / 2,
+      speed: 3.6,
+      phoneBattery: 100.0,
+      flashlightOn: true,
+      panic: 0.0,
+      keysFound: [false, false, false]
+    };
+
+    // Stalker Nemesis: Valak (The Unholy Nun)
+    const valak = {
+      x: 9.5,
+      y: 8.5,
+      angle: 0,
+      speed: 2.3,
+      state: 'STALK', // 'STALK', 'HUNT', 'STUNNED'
+      stunTimer: 0,
+      alertTimer: 0,
+      shriekCooldown: 0
+    };
+
+    // Ghost Companion: Felix (The Phantom Feline)
+    const felix = {
+      x: 21.0,
+      y: 36.0,
+      angle: 0,
+      targetX: 21.0,
+      targetY: 36.0,
+      distractedNun: false,
+      hissCooldown: 0
+    };
+
+    // Interactable Objects: 3 Unholy Keys
+    const keyObjects = [
+      { id: 0, name: "Archivist's Key", x: 35.5, y: 8.5, found: false, room: "Library" },
+      { id: 1, name: "Chapel Altar Key", x: 9.5, y: 5.5, found: false, room: "Chapel" },
+      { id: 2, name: "Abbess's Vow Key", x: 35.5, y: 34.5, found: false, room: "Chambers" }
+    ];
+
+    /* ==========================================================================
+       4. ISOMETRIC 3RD-PERSON RENDERING ENGINE (ASCII Blueprint Aesthetics)
        ========================================================================== */
     const canvas = document.getElementById('game-canvas');
-    const ctx = canvas.getContext('2d', { alpha: false });
+    const ctx = canvas.getContext('2d');
     let screenW = 0, screenH = 0;
-    let cols = 0, rows = 0;
-    let cellW = 0, cellH = 0;
 
-    let charBuffer = [];
-    let colorBuffer = [];
+    // Isometric Projection transforms
+    const TILE_W = 48;
+    const TILE_H = 24;
+    const WALL_H = 44;
 
-    const player = {
-      x: 512.0,
-      y: 512.0,
-      z: 60.0,
-      vz: 0.0,
-      yaw: 0.0,
-      pitch: 0.0,
-      speed: 40.0,
-      eyeHeight: 5.5,
-      isGrounded: true
-    };
-
-    let selectedMat = MAT_STONE;
-    let currentTarget = null;
-
-    /* ==========================================================================
-       3. WORLD GENERATION & BILINEAR INTERPOLATION ENGINE
-       ========================================================================== */
-    const heightMap   = new Float32Array(MAP_SIZE * MAP_SIZE);
-    const materialMap = new Uint8Array(MAP_SIZE * MAP_SIZE);
-
-    function createNoise2D(seed = 101) {
-      const p = new Uint8Array(512);
-      for (let i = 0; i < 256; i++) p[i] = i;
-      let s = seed;
-      for (let i = 255; i > 0; i--) {
-        s = (s * 16807 + 7) % 2147483647;
-        const j = s % (i + 1);
-        const t = p[i]; p[i] = p[j]; p[j] = t;
-      }
-      for (let i = 0; i < 256; i++) p[256 + i] = p[i];
-
-      return function(x, y) {
-        const xi = Math.floor(x) & 255, yi = Math.floor(y) & 255;
-        const xf = x - Math.floor(x),   yf = y - Math.floor(y);
-        const u = xf * xf * xf * (xf * (xf * 6.0 - 15.0) + 10.0);
-        const v = yf * yf * yf * (yf * (yf * 6.0 - 15.0) + 10.0);
-
-        function grad(hash, gx, gy) {
-          const h = hash & 3;
-          return ((h & 1) ? -gx : gx) + ((h & 2) ? -gy : gy);
-        }
-
-        const a1 = p[p[xi] + yi],     a2 = p[p[xi] + yi + 1];
-        const b1 = p[p[xi + 1] + yi], b2 = p[p[xi + 1] + yi + 1];
-
-        const x1 = grad(a1, xf, yf) * (1.0 - u) + grad(b1, xf - 1.0, yf) * u;
-        const x2 = grad(a2, xf, yf - 1.0) * (1.0 - u) + grad(b2, xf - 1.0, yf - 1.0) * u;
-        return x1 * (1.0 - v) + x2 * v;
+    function worldToIso(wx, wy) {
+      return {
+        x: (wx - wy) * (TILE_W * 0.5),
+        y: (wx + wy) * (TILE_H * 0.5)
       };
     }
 
-    function generate1024World() {
-      const noise = createNoise2D(888);
-
-      for (let y = 0; y < MAP_SIZE; y++) {
-        const row = y * MAP_SIZE;
-        for (let x = 0; x < MAP_SIZE; x++) {
-          let h = 0;
-          h += noise(x * 0.002, y * 0.002) * 95.0;
-          h += noise(x * 0.006, y * 0.006) * 44.0;
-          h += noise(x * 0.018, y * 0.018) * 18.0;
-          h += noise(x * 0.050, y * 0.050) * 5.0;
-          h += 50.0;
-
-          if (h > 78.0) {
-            h += Math.pow((h - 78.0) * 0.038, 2.3) * 42.0;
-          }
-
-          const idx = row + x;
-          heightMap[idx] = Math.max(0, h);
-
-          if (h < WATER_LEVEL) {
-            materialMap[idx] = MAT_WATER;
-          } else if (h < WATER_LEVEL + 3.8) {
-            materialMap[idx] = MAT_SAND;
-          } else if (h < 82.0) {
-            materialMap[idx] = MAT_GRASS;
-          } else if (h < 125.0) {
-            materialMap[idx] = MAT_STONE;
-          } else {
-            materialMap[idx] = MAT_SNOW;
-          }
-        }
-      }
-
-      // Forest Groves
-      for (let cy = 32; cy < MAP_SIZE - 32; cy += 14) {
-        for (let cx = 32; cx < MAP_SIZE - 32; cx += 14) {
-          const jx = (cx + (Math.sin(cy * 4.3) * 5.5 + 6.0)) | 0;
-          const jy = (cy + (Math.cos(cx * 3.9) * 5.5 + 6.0)) | 0;
-          const baseH = heightMap[jy * MAP_SIZE + jx];
-
-          if (baseH > WATER_LEVEL + 4.5 && baseH < 80.0) {
-            const trunkH = 5.5 + (Math.sin(jx * 8.3) * 2.5);
-            heightMap[jy * MAP_SIZE + jx] += trunkH;
-            materialMap[jy * MAP_SIZE + jx] = MAT_WOOD;
-
-            for (let dy = -2; dy <= 2; dy++) {
-              for (let dx = -2; dx <= 2; dx++) {
-                if (dx === 0 && dy === 0) continue;
-                const dist = Math.hypot(dx, dy);
-                if (dist <= 2.3) {
-                  const tx = (jx + dx) & MAP_MASK;
-                  const ty = (jy + dy) & MAP_MASK;
-                  const tidx = ty * MAP_SIZE + tx;
-                  heightMap[tidx] += trunkH * (0.65 - dist * 0.15);
-                  materialMap[tidx] = MAT_LEAF;
-                }
-              }
-            }
-          }
-        }
-      }
-
-      // Ancient Ruins
-      const landmarks = [
-        { x: 380, y: 360, r: 10, wallH: 10 },
-        { x: 680, y: 440, r: 12, wallH: 12 },
-        { x: 512, y: 720, r: 9,  wallH: 9  },
-        { x: 260, y: 760, r: 11, wallH: 11 }
-      ];
-
-      landmarks.forEach(ruin => {
-        const floorH = heightMap[ruin.y * MAP_SIZE + ruin.x];
-        for (let dy = -ruin.r; dy <= ruin.r; dy++) {
-          for (let dx = -ruin.r; dx <= ruin.r; dx++) {
-            const dist = Math.hypot(dx, dy);
-            const rx = (ruin.x + dx) & MAP_MASK;
-            const ry = (ruin.y + dy) & MAP_MASK;
-            const ridx = ry * MAP_SIZE + rx;
-
-            if (Math.abs(dist - ruin.r) < 1.4) {
-              const crenel = ((dx + dy) & 1) === 0 ? 2.0 : 0.0;
-              heightMap[ridx] = floorH + ruin.wallH + crenel;
-              materialMap[ridx] = MAT_BRICK;
-            } else if (dist < ruin.r) {
-              heightMap[ridx] = floorH + 0.5;
-              materialMap[ridx] = MAT_STONE;
-            }
-          }
-        }
-        const cidx = ruin.y * MAP_SIZE + ruin.x;
-        heightMap[cidx] = floorH + ruin.wallH + 4.0;
-        materialMap[cidx] = MAT_LIGHT;
-      });
-
-      // Find highland meadow spawn
-      for (let y = 400; y < 650; y += 4) {
-        for (let x = 400; x < 650; x += 4) {
-          const h = heightMap[y * MAP_SIZE + x];
-          const mat = materialMap[y * MAP_SIZE + x];
-          if (mat === MAT_GRASS && h > WATER_LEVEL + 6.0 && h < 75.0) {
-            player.x = x;
-            player.y = y;
-            player.z = h + player.eyeHeight;
-            return;
-          }
-        }
-      }
+    function resize() {
+      screenW = window.innerWidth;
+      screenH = window.innerHeight;
+      canvas.width = screenW;
+      canvas.height = screenH;
     }
+    window.addEventListener('resize', resize);
+    resize();
 
-    // Bilinear Height Interpolation: completely removes blocky terrain staircase steps
-    function sampleBilinearHeight(x, y) {
-      const x0 = Math.floor(x);
-      const y0 = Math.floor(y);
-      const fx = x - x0;
-      const fy = y - y0;
+    // Stream Chat Generator
+    const CHAT_USERS = ['GhostStalker', 'HorrorQueen', 'CryptidWatcher', 'VlogSquad', 'NunBeliever', 'PixelKnight'];
+    const CHAT_COMMENTS = [
+      "THE WALLS HAVE FACES IN THEM WTF",
+      "Did you hear that dragging sound??",
+      "USE FELIX TO DISTRACT HER!!",
+      "Check the altar pews!",
+      "YOUR FLASHLIGHT IS FLICKERING",
+      "VALAK IS IN THE HALLWAY RUNNN",
+      "Bro don't go into the catacombs without the key",
+      "The nun is right behind you omg 😱"
+    ];
+    let chatTimer = 0;
 
-      const m0 = (y0 & MAP_MASK) * MAP_SIZE;
-      const m1 = (((y0 + 1) & MAP_MASK)) * MAP_SIZE;
-      const x0m = x0 & MAP_MASK;
-      const x1m = (x0 + 1) & MAP_MASK;
-
-      const h00 = heightMap[m0 + x0m];
-      const h10 = heightMap[m0 + x1m];
-      const h01 = heightMap[m1 + x0m];
-      const h11 = heightMap[m1 + x1m];
-
-      return (h00 * (1.0 - fx) + h10 * fx) * (1.0 - fy) + (h01 * (1.0 - fx) + h11 * fx) * fy;
-    }
-
-    function sampleTerrain(x, y) {
-      return heightMap[(Math.floor(y) & MAP_MASK) * MAP_SIZE + (Math.floor(x) & MAP_MASK)];
-    }
-
-    function normalizeVector(v) {
-      const len = Math.hypot(v.x, v.y, v.z) || 1.0;
-      return { x: v.x / len, y: v.y / len, z: v.z / len };
+    function addChatMessage(user, msg, isWarn = false) {
+      const box = document.getElementById('chat-box');
+      const div = document.createElement('div');
+      div.className = 'chat-msg';
+      div.innerHTML = `<span class="${isWarn ? 'chat-warn' : 'chat-user'}">${user}:</span> ${msg}`;
+      box.appendChild(div);
+      if (box.children.length > 5) box.removeChild(box.firstChild);
     }
 
     /* ==========================================================================
-       4. PHOTOREALISTIC SHADING PIPELINE (Shadows, AO, Specular & Strata)
+       5. INPUT & MULTI-TOUCH CONTROLLER
        ========================================================================== */
-    // Raymarched Sun Shadow: checks if mountain peaks occlude direct sunlight
-    function computeSunShadow(x, y, h) {
-      const stepSize = 4.2;
-      const sx = SUN_VEC.x * stepSize;
-      const sy = SUN_VEC.y * stepSize;
-      const sz = SUN_VEC.z * stepSize;
+    const keysDown = {};
+    const touchMove = { x: 0, y: 0, active: false };
 
-      let curX = x;
-      let curY = y;
-      let curZ = h + 0.6; // Slightly above ground to avoid self-shadow acne
-
-      for (let s = 1; s <= 4; s++) {
-        curX += sx;
-        curY += sy;
-        curZ += sz;
-        if (sampleTerrain(curX, curY) > curZ) {
-          return 0.38; // In ridge shadow
-        }
-      }
-      return 1.0; // In direct sun
-    }
-
-    // Contact Ambient Occlusion: Darkens valleys and crevices
-    function computeAmbientOcclusion(x, y, h) {
-      const rad = 3.5;
-      const hN = sampleTerrain(x, y - rad);
-      const hS = sampleTerrain(x, y + rad);
-      const hE = sampleTerrain(x + rad, y);
-      const hW = sampleTerrain(x - rad, y);
-      const avg = (hN + hS + hE + hW) * 0.25;
-
-      // Depressions/crevices (avg > h) get shaded darker
-      const diff = avg - h;
-      return Math.max(0.45, Math.min(1.0, 1.0 - diff * 0.08));
-    }
-
-    // Complete Surface Shader
-    function shadePhotorealisticSurface(x, y, h, d, maxD, mat, isWater, animTime, isTargeted, rayCosA, raySinA) {
-      const def = MATERIALS[mat] || MATERIALS[MAT_STONE];
-      let [r, g, b] = def.base;
-
-      let normalX = 0, normalY = 0, normalZ = 1;
-
-      if (!isWater) {
-        // High-precision finite differences for normal extraction
-        const delta = 1.0;
-        const hL = sampleBilinearHeight(x - delta, y);
-        const hR = sampleBilinearHeight(x + delta, y);
-        const hU = sampleBilinearHeight(x, y - delta);
-        const hD = sampleBilinearHeight(x, y + delta);
-
-        const dx = (hR - hL) * 0.5;
-        const dy = (hD - hU) * 0.5;
-        const len = Math.hypot(dx, dy, 1.0);
-        normalX = -dx / len;
-        normalY = -dy / len;
-        normalZ = 1.0 / len;
-
-        // Geological Sedimentary Strata for Rock/Cliffs
-        if (mat === MAT_STONE || mat === MAT_BRICK) {
-          const strata = Math.sin(h * 0.72) * 16.0 + Math.sin(h * 1.8) * 8.0;
-          r = Math.max(0, Math.min(255, r + strata));
-          g = Math.max(0, Math.min(255, g + strata * 0.9));
-          b = Math.max(0, Math.min(255, b + strata * 0.7));
-        }
-      } else {
-        // Water wave normal perturbation
-        const waveScale = 0.45;
-        normalX = Math.sin(x * waveScale + animTime * 3.0) * 0.18;
-        normalY = Math.cos(y * waveScale + animTime * 2.6) * 0.18;
-        const nLen = Math.hypot(normalX, normalY, 1.0);
-        normalX /= nLen;
-        normalY /= nLen;
-        normalZ = 1.0 / nLen;
-
-        // Shoreline Shallow Transparency & Foam
-        const groundUnderH = sampleTerrain(x, y);
-        const waterDepth = Math.max(0, WATER_LEVEL - groundUnderH);
-
-        if (waterDepth < 1.4) {
-          // Shore foam and turquoise tint
-          r = Math.floor(r * 0.5 + 230 * 0.5);
-          g = Math.floor(g * 0.5 + 245 * 0.5);
-          b = Math.floor(b * 0.5 + 255 * 0.5);
-        } else if (waterDepth < 3.2) {
-          // Shallow aquamarine
-          r = 38; g = 175; b = 210;
-        }
-      }
-
-      // Diffuse Lambertian component
-      const NdotL = normalX * SUN_VEC.x + normalY * SUN_VEC.y + normalZ * SUN_VEC.z;
-      const diffuse = Math.max(0.0, NdotL);
-
-      // Cast Sun Shadows & Contact Ambient Occlusion
-      let shadow = 1.0;
-      let ao = 1.0;
-      if (!isWater && mat !== MAT_LIGHT) {
-        shadow = computeSunShadow(x, y, h);
-        ao = computeAmbientOcclusion(x, y, h);
-      }
-
-      // Specular Highlight (Blinn-Phong) on Water: Forms sparkling sunpaths
-      let specular = 0.0;
-      if (isWater) {
-        // View vector toward camera: V = (-rayCosA, -raySinA, cameraPitch)
-        const vx = -rayCosA, vy = -raySinA, vz = 0.45;
-        const vLen = Math.hypot(vx, vy, vz);
-        const hx = (vx / vLen) + SUN_VEC.x;
-        const hy = (vy / vLen) + SUN_VEC.y;
-        const hz = (vz / vLen) + SUN_VEC.z;
-        const hLen = Math.hypot(hx, hy, hz);
-        const NdotH = Math.max(0.0, normalX * (hx / hLen) + normalY * (hy / hLen) + normalZ * (hz / hLen));
-        specular = Math.pow(NdotH, 32) * 1.6;
-      }
-
-      // Master Lighting equation: Ambient(0.38) + Diffuse * Shadow + Specular
-      let totalLight = (0.38 + diffuse * 0.62 * shadow) * ao;
-      if (mat === MAT_LIGHT) totalLight = 1.6;
-
-      r = Math.min(255, Math.floor(r * totalLight + specular * 255));
-      g = Math.min(255, Math.floor(g * totalLight + specular * 240));
-      b = Math.min(255, Math.floor(b * totalLight + specular * 180));
-
-      // Aerial Distance Perspective Fog (Scattering into daytime haze)
-      const fog = Math.min(1.0, Math.pow(d / maxD, 1.4));
-      r = Math.floor(r * (1.0 - fog) + DAY_FOG[0] * fog);
-      g = Math.floor(g * (1.0 - fog) + DAY_FOG[1] * fog);
-      b = Math.floor(b * (1.0 - fog) + DAY_FOG[2] * fog);
-
-      // Perceptual Density Glyph Mapping
-      const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0;
-      let glyphIdx = Math.floor(lum * DENSITY_RAMP.length);
-      glyphIdx = Math.max(0, Math.min(DENSITY_RAMP.length - 1, glyphIdx));
-      let char = DENSITY_RAMP[glyphIdx];
-
-      // Glistening water crest
-      if (isWater && specular > 0.6) {
-        char = specular > 0.95 ? '☼' : '*';
-      }
-
-      if (isTargeted) {
-        char = '█';
-        r = Math.min(255, r + 90);
-        g = Math.min(255, g + 80);
-        b = Math.min(255, b + 20);
-      }
-
-      return { char, color: `rgb(${r},${g},${b})` };
-    }
-
-    /* ==========================================================================
-       5. RAYCASTING ENGINE & PROCEDURAL MIE SCATTERING SKY
-       ========================================================================== */
-    function updateTargetRaycast() {
-      const cosY = Math.cos(player.yaw);
-      const sinY = Math.sin(player.yaw);
-      const pitchCos = Math.cos(player.pitch);
-      const dirX = cosY * pitchCos;
-      const dirY = sinY * pitchCos;
-      const dirZ = -Math.sin(player.pitch) * 1.4;
-
-      let d = 0.5;
-      currentTarget = null;
-
-      while (d < REACH_DISTANCE) {
-        const rx = player.x + dirX * d;
-        const ry = player.y + dirY * d;
-        const rz = player.z + dirZ * d;
-
-        const mx = Math.floor(rx) & MAP_MASK;
-        const my = Math.floor(ry) & MAP_MASK;
-        const gh = sampleBilinearHeight(rx, ry);
-
-        if (rz <= gh) {
-          currentTarget = {
-            x: mx,
-            y: my,
-            h: gh,
-            mat: materialMap[my * MAP_SIZE + mx],
-            dist: d
-          };
-          break;
-        }
-        d += 0.35;
-      }
-
-      const infoEl = document.getElementById('target-info');
-      if (currentTarget) {
-        const matName = (MATERIALS[currentTarget.mat] || {}).name || "Block";
-        infoEl.textContent = `TARGET: [ ${matName.toUpperCase()} ] @ (${currentTarget.x}, ${currentTarget.y}) DIST: ${currentTarget.dist.toFixed(1)}m`;
-        infoEl.style.borderColor = "#ca8a04";
-      } else {
-        infoEl.textContent = `TARGET: NONE`;
-        infoEl.style.borderColor = "rgba(202, 138, 4, 0.3)";
-      }
-    }
-
-    function renderRaycastScene(time) {
-      const verticalScale = rows * 1.05;
-      const horizonY = rows * (0.45 + player.pitch);
-
-      const totalCells = cols * rows;
-      for (let i = 0; i < totalCells; i++) {
-        charBuffer[i] = ' ';
-        colorBuffer[i] = '#559cf0';
-      }
-
-      for (let c = 0; c < cols; c++) {
-        const screenU = (c / (cols - 1)) - 0.5;
-        const rayAngle = player.yaw + screenU * WIDE_FOV;
-        const cosA = Math.cos(rayAngle);
-        const sinA = Math.sin(rayAngle);
-        const fishEye = Math.cos(screenU * WIDE_FOV);
-
-        let maxHeight = rows;
-        let d = 1.2;
-
-        while (d < MAX_RAY_DIST) {
-          const dStep = 0.45 + d * 0.015;
-          d += dStep;
-
-          const rx = player.x + cosA * d;
-          const ry = player.y + sinA * d;
-          const mx = Math.floor(rx) & MAP_MASK;
-          const my = Math.floor(ry) & MAP_MASK;
-          const idx = my * MAP_SIZE + mx;
-
-          let h = sampleBilinearHeight(rx, ry);
-          const mat = materialMap[idx];
-          let isWater = false;
-
-          if (mat === MAT_WATER || h < WATER_LEVEL) {
-            h = WATER_LEVEL + Math.sin(rx * 0.2 + ry * 0.15 + time * 3.0) * 0.35;
-            isWater = true;
-          }
-
-          const correctedDist = d * fishEye;
-          const projY = Math.floor((player.z - h) / correctedDist * verticalScale + horizonY);
-
-          if (projY < maxHeight) {
-            const yStart = Math.max(0, projY);
-            const yEnd = Math.min(rows, maxHeight);
-
-            if (yStart < yEnd) {
-              const isTargeted = currentTarget && currentTarget.x === mx && currentTarget.y === my;
-              const visual = shadePhotorealisticSurface(rx, ry, h, d, MAX_RAY_DIST, mat, isWater, time, isTargeted, cosA, sinA);
-
-              for (let y = yStart; y < yEnd; y++) {
-                const cellIdx = y * cols + c;
-                charBuffer[cellIdx] = visual.char;
-                colorBuffer[cellIdx] = visual.color;
-              }
-            }
-            maxHeight = projY;
-            if (maxHeight <= 0) break;
-          }
-        }
-
-        // ======================================================================
-        // PHYSICAL SKY & SOLAR MIE SCATTERING
-        // ======================================================================
-        const sunYaw = Math.atan2(SUN_VEC.y, SUN_VEC.x);
-        let dSunYaw = (rayAngle - sunYaw) % (Math.PI * 2);
-        if (dSunYaw < -Math.PI) dSunYaw += Math.PI * 2;
-        if (dSunYaw > Math.PI) dSunYaw -= Math.PI * 2;
-
-        // View-to-Sun alignment (Mie forward scattering)
-        const cosTheta = Math.max(0.0, Math.cos(dSunYaw));
-        const mieGlow = Math.pow(cosTheta, 18) * 0.65;
-
-        const isNearSun = Math.abs(dSunYaw) < 0.14;
-        const sunRow = Math.floor(horizonY - SUN_VEC.z * rows * 0.85);
-
-        for (let y = 0; y < Math.min(rows, maxHeight); y++) {
-          const sIdx = y * cols + c;
-
-          const skyT = Math.max(0, Math.min(1.0, y / (horizonY + 0.001)));
-          let sr = Math.floor(SKY_ZENITH[0] * (1.0 - skyT) + SKY_HORIZON[0] * skyT + mieGlow * 180);
-          let sg = Math.floor(SKY_ZENITH[1] * (1.0 - skyT) + SKY_HORIZON[1] * skyT + mieGlow * 150);
-          let sb = Math.floor(SKY_ZENITH[2] * (1.0 - skyT) + SKY_HORIZON[2] * skyT + mieGlow * 70);
-
-          sr = Math.min(255, sr);
-          sg = Math.min(255, sg);
-          sb = Math.min(255, sb);
-
-          // Brilliant Golden Sun Disc & Corona
-          if (isNearSun && Math.abs(y - sunRow) < 3) {
-            const distToSun = Math.hypot(dSunYaw * 20.0, y - sunRow);
-            if (distToSun < 1.4) {
-              charBuffer[sIdx] = '☼';
-              colorBuffer[sIdx] = '#ffffff';
-            } else if (distToSun < 3.2) {
-              charBuffer[sIdx] = '*';
-              colorBuffer[sIdx] = '#fef08a';
-            } else {
-              charBuffer[sIdx] = '░';
-              colorBuffer[sIdx] = '#fde68a';
-            }
-            continue;
-          }
-
-          // Drifting Cumulus Clouds
-          const cloudU = rayAngle * 4.2 + time * 0.04;
-          const cloudV = (y - horizonY) * 0.12;
-          const cloudVal = Math.sin(cloudU) * Math.cos(cloudV * 2.2) + Math.sin(cloudU * 2.1 + cloudV * 3.4) * 0.5;
-
-          if (cloudVal > 0.62 && y < horizonY - 4) {
-            charBuffer[sIdx] = cloudVal > 0.95 ? '█' : (cloudVal > 0.8 ? '▓' : '░');
-            colorBuffer[sIdx] = '#f8fafc';
-          } else {
-            charBuffer[sIdx] = ' ';
-            colorBuffer[sIdx] = `rgb(${sr},${sg},${sb})`;
-          }
-        }
-      }
-    }
-
-    /* ==========================================================================
-       6. BATCHED CANVAS RENDER LOOP
-       ========================================================================== */
-    function renderBufferToScreen() {
-      ctx.fillStyle = '#559cf0';
-      ctx.fillRect(0, 0, screenW, screenH);
-
-      const fontSize = Math.floor(cellH * 0.95);
-      ctx.font = `${fontSize}px monospace`;
-      ctx.textBaseline = 'top';
-
-      for (let r = 0; r < rows; r++) {
-        const rowOffset = r * cols;
-        const yPos = r * cellH;
-
-        let curColor = '';
-        let batch = '';
-        let startCol = 0;
-
-        for (let c = 0; c < cols; c++) {
-          const idx = rowOffset + c;
-          const char = charBuffer[idx] || ' ';
-          const color = colorBuffer[idx] || '#559cf0';
-
-          if (color === curColor) {
-            batch += char;
-          } else {
-            if (batch.length > 0 && curColor !== '#559cf0') {
-              ctx.fillStyle = curColor;
-              ctx.fillText(batch, startCol * cellW, yPos);
-            }
-            curColor = color;
-            batch = char;
-            startCol = c;
-          }
-        }
-
-        if (batch.length > 0 && curColor !== '#559cf0') {
-          ctx.fillStyle = curColor;
-          ctx.fillText(batch, startCol * cellW, yPos);
-        }
-      }
-    }
-
-    /* ==========================================================================
-       7. MINING, BUILDING & GAMEPLAY
-       ========================================================================== */
-    function mineBlock() {
-      if (!currentTarget) return;
-      const idx = currentTarget.y * MAP_SIZE + currentTarget.x;
-      heightMap[idx] = Math.max(0, heightMap[idx] - 2.5);
-
-      if (heightMap[idx] < WATER_LEVEL) {
-        materialMap[idx] = MAT_WATER;
-      } else if (heightMap[idx] < 70.0) {
-        materialMap[idx] = MAT_DIRT;
-      } else {
-        materialMap[idx] = MAT_STONE;
-      }
-      updateTargetRaycast();
-    }
-
-    function buildBlock() {
-      if (!currentTarget) return;
-      const idx = currentTarget.y * MAP_SIZE + currentTarget.x;
-      heightMap[idx] += 2.5;
-      materialMap[idx] = selectedMat;
-      updateTargetRaycast();
-    }
-
-    function triggerJump() {
-      if (player.isGrounded) {
-        player.vz = 26.0;
-        player.isGrounded = false;
-      }
-    }
-
-    /* ==========================================================================
-       8. ASCII RADAR MINIMAP
-       ========================================================================== */
-    const minimapCard = document.getElementById('minimap-card');
-    function updateMinimap() {
-      const radius = 5;
-      const px = Math.floor(player.x);
-      const py = Math.floor(player.y);
-      let out = "RADAR 1024\n";
-
-      for (let dy = -radius; dy <= radius; dy++) {
-        let line = "";
-        for (let dx = -radius; dx <= radius; dx++) {
-          if (dx === 0 && dy === 0) {
-            const deg = ((player.yaw * 180 / Math.PI) % 360 + 360) % 360;
-            line += (deg >= 45 && deg < 135) ? "v" :
-                    (deg >= 135 && deg < 225) ? "<" :
-                    (deg >= 225 && deg < 315) ? "^" : ">";
-            continue;
-          }
-          const sx = (px + dx * 10) & MAP_MASK;
-          const sy = (py + dy * 10) & MAP_MASK;
-          const h = heightMap[sy * MAP_SIZE + sx];
-          const m = materialMap[sy * MAP_SIZE + sx];
-
-          if (m === MAT_LIGHT) line += "☼";
-          else if (m === MAT_BRICK) line += "■";
-          else if (m === MAT_WOOD || m === MAT_LEAF) line += "♣";
-          else if (h < WATER_LEVEL) line += "~";
-          else if (h > 115) line += "^";
-          else line += ".";
-        }
-        out += line + "\n";
-      }
-      minimapCard.textContent = out.trimEnd();
-    }
-
-    /* ==========================================================================
-       9. RESPONSIVE CONTROLS & EVENT LISTENERS
-       ========================================================================== */
-    const navState = {
-      Forward: false,
-      Backward: false,
-      StrafeLeft: false,
-      StrafeRight: false,
-      TurnLeft: false,
-      TurnRight: false,
-      LookUp: false,
-      LookDown: false
-    };
-
-    document.querySelectorAll('.nav-btn').forEach(btn => {
-      const key = btn.getAttribute('data-key');
-
-      function startPress(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        navState[key] = true;
-        btn.classList.add('active');
-      }
-
-      function endPress(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        navState[key] = false;
-        btn.classList.remove('active');
-      }
-
-      btn.addEventListener('pointerdown', startPress);
-      btn.addEventListener('pointerup', endPress);
-      btn.addEventListener('pointercancel', endPress);
-      btn.addEventListener('pointerleave', endPress);
-    });
-
-    const btnMine = document.getElementById('btn-mine');
-    const btnBuild = document.getElementById('btn-build');
-    const btnJump = document.getElementById('btn-jump');
-
-    function bindAction(elem, actionFn) {
-      elem.addEventListener('pointerdown', (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        actionFn();
-      });
-    }
-    bindAction(btnMine, mineBlock);
-    bindAction(btnBuild, buildBlock);
-    bindAction(btnJump, triggerJump);
-
-    const keys = {};
     window.addEventListener('keydown', (e) => {
-      keys[e.code] = true;
-      if (e.code === 'Digit1') setHotbarSlot(0);
-      if (e.code === 'Digit2') setHotbarSlot(1);
-      if (e.code === 'Digit3') setHotbarSlot(2);
-      if (e.code === 'Digit4') setHotbarSlot(3);
-      if (e.code === 'Digit5') setHotbarSlot(4);
-      if (e.code === 'Digit6') setHotbarSlot(5);
-      if (e.code === 'Space') { e.preventDefault(); triggerJump(); }
-      if (e.code === 'KeyE') buildBlock();
-      if (e.code === 'KeyQ') mineBlock();
+      keysDown[e.code] = true;
+      if (e.code === 'KeyE' || e.code === 'Space') handleInteraction();
+      if (e.code === 'KeyC') commandFelix();
+      if (e.code === 'KeyF') triggerFlashStun();
     });
-    window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+    window.addEventListener('keyup', (e) => { keysDown[e.code] = false; });
 
-    // Desktop Mouse Drag
-    canvas.addEventListener('mousedown', (e) => {
-      if (e.button === 0) mineBlock();
-      if (e.button === 2) buildBlock();
-    });
-    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+    // Touch Virtual Joystick on Left Screen Half
+    let joyTouchId = null;
+    let joyBaseX = 0, joyBaseY = 0;
+    const JOY_RADIUS = 48.0;
 
-    let isMouseDragging = false;
-    let lastMouseX = 0, lastMouseY = 0;
-    canvas.addEventListener('mousedown', (e) => {
-      isMouseDragging = true;
-      lastMouseX = e.clientX; lastMouseY = e.clientY;
-    });
-    window.addEventListener('mouseup', () => { isMouseDragging = false; });
-    window.addEventListener('mousemove', (e) => {
-      if (!isMouseDragging) return;
-      const dx = e.clientX - lastMouseX;
-      const dy = e.clientY - lastMouseY;
-      player.yaw += dx * 0.005;
-      player.pitch = Math.max(-0.45, Math.min(0.45, player.pitch - dy * 0.0035));
-      lastMouseX = e.clientX; lastMouseY = e.clientY;
-    });
-
-    // Touch Swipe-to-Look
-    let activeTouchId = null;
-    let touchStartX = 0, touchStartY = 0;
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      if (activeTouchId === null && e.changedTouches.length > 0) {
-        const t = e.changedTouches[0];
-        activeTouchId = t.identifier;
-        touchStartX = t.clientX;
-        touchStartY = t.clientY;
+      const halfW = window.innerWidth * 0.5;
+      for (let i = 0; i < e.changedTouches.length; i++) {
+        const t = e.changedTouches[i];
+        if (t.clientX < halfW && joyTouchId === null) {
+          joyTouchId = t.identifier;
+          joyBaseX = t.clientX;
+          joyBaseY = t.clientY;
+          touchMove.active = true;
+        }
       }
     }, { passive: false });
 
@@ -1061,165 +679,472 @@
       e.preventDefault();
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
-        if (t.identifier === activeTouchId) {
-          const dx = t.clientX - touchStartX;
-          const dy = t.clientY - touchStartY;
-          player.yaw += dx * 0.007;
-          player.pitch = Math.max(-0.45, Math.min(0.45, player.pitch - dy * 0.005));
-          touchStartX = t.clientX;
-          touchStartY = t.clientY;
+        if (t.identifier === joyTouchId) {
+          const dx = t.clientX - joyBaseX;
+          const dy = t.clientY - joyBaseY;
+          const dist = Math.hypot(dx, dy);
+          const rad = Math.min(dist, JOY_RADIUS);
+          const angle = Math.atan2(dy, dx);
+          touchMove.x = (Math.cos(angle) * rad) / JOY_RADIUS;
+          touchMove.y = (Math.sin(angle) * rad) / JOY_RADIUS;
         }
       }
     }, { passive: false });
 
-    function handleTouchEnd(e) {
+    function endTouch(e) {
       for (let i = 0; i < e.changedTouches.length; i++) {
-        if (e.changedTouches[i].identifier === activeTouchId) {
-          activeTouchId = null;
+        if (e.changedTouches[i].identifier === joyTouchId) {
+          joyTouchId = null;
+          touchMove.active = false;
+          touchMove.x = 0;
+          touchMove.y = 0;
         }
       }
     }
-    canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
-    canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
+    canvas.addEventListener('touchend', endTouch, { passive: false });
+    canvas.addEventListener('touchcancel', endTouch, { passive: false });
 
-    // Hotbar selector
-    const slots = document.querySelectorAll('.hotbar-slot');
-    function setHotbarSlot(idx) {
-      slots.forEach((s, i) => {
-        if (i === idx) {
-          s.classList.add('active');
-          selectedMat = parseInt(s.getAttribute('data-mat'), 10);
+    // Action button listeners
+    document.getElementById('btn-interact').addEventListener('pointerdown', (e) => { e.preventDefault(); handleInteraction(); });
+    document.getElementById('btn-felix').addEventListener('pointerdown', (e) => { e.preventDefault(); commandFelix(); });
+    document.getElementById('btn-flash').addEventListener('pointerdown', (e) => { e.preventDefault(); triggerFlashStun(); });
+
+    /* ==========================================================================
+       6. CORE GAMEPLAY LOGIC & AI
+       ========================================================================== */
+    let gameState = 'START';
+    let heartbeatTimer = 0;
+
+    function handleInteraction() {
+      if (gameState !== 'PLAYING') return;
+
+      // Check proximity to unholy keys
+      keyObjects.forEach(k => {
+        if (!k.found && Math.hypot(player.x - k.x, player.y - k.y) < 1.8) {
+          k.found = true;
+          player.keysFound[k.id] = true;
+          playChime();
+          document.getElementById(`slot-key${k.id + 1}`).classList.add('found');
+          addChatMessage('STREAM_SYSTEM', `UNLOCKED: ${k.name.toUpperCase()}!`, true);
+        }
+      });
+
+      // Check proximity to exit gate
+      if (Math.hypot(player.x - 21, player.y - 40) < 2.4) {
+        if (player.keysFound.every(Boolean)) {
+          triggerVictory();
         } else {
-          s.classList.remove('active');
+          addChatMessage('WARD', 'The Unholy Gate is sealed by 3 missing Vow Keys!', true);
+        }
+      }
+    }
+
+    function commandFelix() {
+      if (gameState !== 'PLAYING') return;
+      playFelixSound(false);
+
+      // Find nearest unfound key to guide player
+      let targetKey = keyObjects.find(k => !k.found);
+      if (targetKey) {
+        felix.targetX = targetKey.x + (Math.random() - 0.5) * 1.5;
+        felix.targetY = targetKey.y + (Math.random() - 0.5) * 1.5;
+        addChatMessage('Felix', 'Meows softly and points his ghostly tail forward...');
+      } else {
+        // Felix distracts Valak away
+        felix.targetX = valak.x + (Math.random() - 0.5) * 4.0;
+        felix.targetY = valak.y + (Math.random() - 0.5) * 4.0;
+        addChatMessage('Felix', 'Runs into the corridor to draw the Nun away!', true);
+      }
+    }
+
+    function triggerFlashStun() {
+      if (gameState !== 'PLAYING' || player.phoneBattery < 25) return;
+      player.phoneBattery = Math.max(0, player.phoneBattery - 25);
+      document.getElementById('battery-level').textContent = `⚡ ${Math.floor(player.phoneBattery)}%`;
+
+      // Full screen white camera flash
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, screenW, screenH);
+
+      // Stun Valak if in range and line of sight
+      const distToNun = Math.hypot(player.x - valak.x, player.y - valak.y);
+      if (distToNun < 8.0) {
+        valak.state = 'STUNNED';
+        valak.stunTimer = 4.5;
+        playValakShriek();
+        addChatMessage('FLASH', 'VALAK WAS BLINDED BY YOUR PHONE CAMERA FLASH!', true);
+      }
+    }
+
+    function updateAI(dt) {
+      // 1. Felix AI
+      const fdx = felix.targetX - felix.x;
+      const fdy = felix.targetY - felix.y;
+      const fdist = Math.hypot(fdx, fdy);
+      if (fdist > 0.4) {
+        felix.x += (fdx / fdist) * 3.8 * dt;
+        felix.y += (fdy / fdist) * 3.8 * dt;
+        felix.angle = Math.atan2(fdy, fdx);
+      } else {
+        // Follow closely behind Blogger
+        felix.targetX = player.x - Math.cos(player.angle) * 1.2;
+        felix.targetY = player.y - Math.sin(player.angle) * 1.2;
+      }
+
+      // Felix hiss when Valak is within 8 units
+      const felixToNun = Math.hypot(felix.x - valak.x, felix.y - valak.y);
+      felix.hissCooldown -= dt;
+      if (felixToNun < 8.0 && felix.hissCooldown <= 0) {
+        playFelixSound(true);
+        felix.hissCooldown = 4.0;
+        addChatMessage('Felix', 'HISSSSSS! (Valak is right around the corner!)', true);
+      }
+
+      // 2. Valak Stalker AI
+      const distToPlayer = Math.hypot(player.x - valak.x, player.y - valak.y);
+
+      if (valak.state === 'STUNNED') {
+        valak.stunTimer -= dt;
+        if (valak.stunTimer <= 0) valak.state = 'STALK';
+      } else {
+        // Check Line-of-sight & Hearing
+        const canSee = distToPlayer < 9.0;
+        if (canSee) {
+          valak.state = 'HUNT';
+          valak.speed = 3.2;
+          valak.shriekCooldown -= dt;
+          if (valak.shriekCooldown <= 0) {
+            playValakShriek();
+            valak.shriekCooldown = 7.0;
+          }
+        } else {
+          valak.state = 'STALK';
+          valak.speed = 1.9;
+        }
+
+        // Target coordinates: player, or distracted by Felix
+        const targetX = player.x;
+        const targetY = player.y;
+
+        const vdx = targetX - valak.x;
+        const vdy = targetY - valak.y;
+        const vdist = Math.hypot(vdx, vdy);
+
+        if (vdist > 0.5) {
+          const nx = valak.x + (vdx / vdist) * valak.speed * dt;
+          const ny = valak.y + (vdy / vdist) * valak.speed * dt;
+          // Simple collision check
+          if (mansionMap[Math.floor(ny) * GRID_W + Math.floor(nx)] !== T_WALL) {
+            valak.x = nx;
+            valak.y = ny;
+          }
+          valak.angle = Math.atan2(vdy, vdx);
+        }
+
+        // Jumpscare caught condition
+        if (distToPlayer < 0.9) {
+          triggerGameOver();
+        }
+      }
+
+      // 3. Player Panic & Heartbeat
+      player.panic = Math.max(0, Math.min(1.0, 1.0 - (distToPlayer / 12.0)));
+      document.getElementById('panic-fill').style.width = `${Math.floor(player.panic * 100)}%`;
+
+      heartbeatTimer += dt * (1.0 + player.panic * 2.5);
+      if (heartbeatTimer > 1.2) {
+        heartbeatTimer = 0;
+        playHeartbeat(player.panic);
+      }
+    }
+
+    function triggerGameOver() {
+      gameState = 'DEAD';
+      playValakShriek();
+      const modal = document.getElementById('modal-screen');
+      const title = document.getElementById('modal-title');
+      const desc = document.getElementById('modal-desc');
+      const btn = document.getElementById('btn-start');
+
+      title.textContent = "STREAM OFFLINE // SLAIN BY VALAK";
+      title.style.color = "#dc2626";
+      desc.innerHTML = "Valak severed your live stream with her spectral scythe.<br>Your skull joins the Ossuary.";
+      btn.textContent = "RESPAWN // RETRY";
+      modal.style.display = 'flex';
+    }
+
+    function triggerVictory() {
+      gameState = 'ESCAPED';
+      playChime();
+      const modal = document.getElementById('modal-screen');
+      const title = document.getElementById('modal-title');
+      const desc = document.getElementById('modal-desc');
+      const btn = document.getElementById('btn-start');
+
+      title.textContent = "STREAM ESCAPED // 1.2M VIEWERS";
+      title.style.color = "#22c55e";
+      desc.innerHTML = "You unlocked all 3 Unholy Vows and escaped Castle Valak with Felix!<br>The footage has gone viral worldwide.";
+      btn.textContent = "PLAY AGAIN";
+      modal.style.display = 'flex';
+    }
+
+    /* ==========================================================================
+       7. GRAPHICAL RENDERING (Isometric Gothic ASCII / Pixel Art)
+       ========================================================================== */
+    function render() {
+      ctx.fillStyle = '#050811';
+      ctx.fillRect(0, 0, screenW, screenH);
+
+      // Camera centered on Youthful Blogger
+      const pIso = worldToIso(player.x, player.y);
+      const camX = screenW * 0.5 - pIso.x;
+      const camY = screenH * 0.55 - pIso.y;
+
+      ctx.save();
+      ctx.translate(camX, camY);
+
+      // Draw Blueprint Grid Lines
+      const pTileX = Math.floor(player.x);
+      const pTileY = Math.floor(player.y);
+      const range = 14;
+
+      for (let y = Math.max(0, pTileY - range); y <= Math.min(GRID_H - 1, pTileY + range); y++) {
+        for (let x = Math.max(0, pTileX - range); x <= Math.min(GRID_W - 1, pTileX + range); x++) {
+          const tile = mansionMap[y * GRID_W + x];
+          const iso = worldToIso(x, y);
+
+          // Distance to player flashlight
+          const distToP = Math.hypot(player.x - x, player.y - y);
+          const isLit = distToP < 9.0;
+          const lightAlpha = Math.max(0.08, 1.0 - (distToP / 9.0));
+
+          if (tile === T_FLOOR) {
+            // Isometric Blueprint Stone Tile
+            ctx.strokeStyle = `rgba(56, 189, 248, ${lightAlpha * 0.25})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(iso.x, iso.y);
+            ctx.lineTo(iso.x + TILE_W * 0.5, iso.y + TILE_H * 0.5);
+            ctx.lineTo(iso.x, iso.y + TILE_H);
+            ctx.lineTo(iso.x - TILE_W * 0.5, iso.y + TILE_H * 0.5);
+            ctx.closePath();
+            ctx.fillStyle = `rgba(10, 18, 38, ${lightAlpha})`;
+            ctx.fill();
+            ctx.stroke();
+
+            // ASCII subtle glyph in center
+            if (isLit) {
+              ctx.fillStyle = `rgba(148, 163, 184, ${lightAlpha * 0.5})`;
+              ctx.font = '9px monospace';
+              ctx.fillText('·', iso.x - 2, iso.y + 14);
+            }
+          } else if (tile === T_WALL) {
+            // 3D Isometric Wall Column with ASCII Engravings
+            ctx.fillStyle = `rgba(15, 23, 42, ${lightAlpha})`;
+            ctx.beginPath();
+            ctx.moveTo(iso.x, iso.y - WALL_H);
+            ctx.lineTo(iso.x + TILE_W * 0.5, iso.y + TILE_H * 0.5 - WALL_H);
+            ctx.lineTo(iso.x + TILE_W * 0.5, iso.y + TILE_H * 0.5);
+            ctx.lineTo(iso.x, iso.y + TILE_H);
+            ctx.lineTo(iso.x - TILE_W * 0.5, iso.y + TILE_H * 0.5);
+            ctx.lineTo(iso.x - TILE_W * 0.5, iso.y + TILE_H * 0.5 - WALL_H);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = `rgba(96, 165, 250, ${lightAlpha * 0.4})`;
+            ctx.stroke();
+
+            // Gothic ASCII engraving on wall facade
+            if (isLit) {
+              ctx.fillStyle = `rgba(203, 213, 225, ${lightAlpha * 0.7})`;
+              ctx.font = '10px monospace';
+              ctx.fillText('#', iso.x - 3, iso.y + 2 - WALL_H * 0.5);
+            }
+          } else if (tile === T_PIT) {
+            // Spectral Pit
+            ctx.fillStyle = 'rgba(20, 83, 45, 0.45)';
+            ctx.beginPath();
+            ctx.arc(iso.x, iso.y + 12, 14, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#4ade80';
+            ctx.font = '11px monospace';
+            ctx.fillText('≈', iso.x - 4, iso.y + 16);
+          } else if (tile === T_CROSS) {
+            // Desecrated Altar Cross
+            ctx.fillStyle = '#facc15';
+            ctx.font = '16px monospace';
+            ctx.fillText('✝', iso.x - 5, iso.y + 14);
+          } else if (tile === T_FOUNT) {
+            // Blood Fountain
+            ctx.fillStyle = '#dc2626';
+            ctx.font = '16px monospace';
+            ctx.fillText('⛲', iso.x - 8, iso.y + 14);
+          } else if (tile === T_GATE) {
+            // Grand Exit Gate
+            ctx.fillStyle = player.keysFound.every(Boolean) ? '#22c55e' : '#ef4444';
+            ctx.font = '16px monospace';
+            ctx.fillText('⛩', iso.x - 8, iso.y + 14);
+          }
+        }
+      }
+
+      // Draw Unholy Keys
+      keyObjects.forEach(k => {
+        if (!k.found) {
+          const kIso = worldToIso(k.x, k.y);
+          ctx.fillStyle = '#facc15';
+          ctx.font = '14px monospace';
+          ctx.fillText('🗝', kIso.x - 6, kIso.y + 8);
+          // Golden aura
+          ctx.strokeStyle = 'rgba(250, 204, 21, 0.4)';
+          ctx.beginPath();
+          ctx.arc(kIso.x, kIso.y + 4, 10, 0, Math.PI * 2);
+          ctx.stroke();
         }
       });
-    }
-    slots.forEach((s, idx) => {
-      s.addEventListener('pointerdown', (e) => {
-        e.stopPropagation();
-        setHotbarSlot(idx);
-      });
-    });
 
-    /* ==========================================================================
-       10. PHYSICS & GAME LOOP
-       ========================================================================== */
-    function updatePhysics(dt) {
-      let moveX = 0, moveY = 0;
+      // Draw Felix (The Phantom Feline)
+      const fIso = worldToIso(felix.x, felix.y);
+      ctx.fillStyle = '#38bdf8';
+      ctx.font = '14px monospace';
+      ctx.fillText('ᓚᘏᗢ', fIso.x - 12, fIso.y + 4); // ASCII cat sprite
+      // Ghostly cyan halo
+      ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+      ctx.beginPath();
+      ctx.arc(fIso.x, fIso.y, 12, 0, Math.PI * 2);
+      ctx.fill();
 
-      if (navState.Forward) moveY += 1.0;
-      if (navState.Backward) moveY -= 1.0;
-      if (navState.StrafeLeft) moveX -= 1.0;
-      if (navState.StrafeRight) moveX += 1.0;
+      // Draw Valak (The Unholy Nun)
+      const vIso = worldToIso(valak.x, valak.y);
+      // Terrifying shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.beginPath();
+      ctx.ellipse(vIso.x, vIso.y + 10, 12, 6, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-      if (navState.TurnLeft) player.yaw -= 2.2 * dt;
-      if (navState.TurnRight) player.yaw += 2.2 * dt;
-      if (navState.LookUp) player.pitch = Math.min(0.45, player.pitch + 1.2 * dt);
-      if (navState.LookDown) player.pitch = Math.max(-0.45, player.pitch - 1.2 * dt);
+      // Black habit & white face
+      ctx.fillStyle = '#0f172a';
+      ctx.fillRect(vIso.x - 7, vIso.y - 24, 14, 28);
+      ctx.fillStyle = '#f8fafc';
+      ctx.font = '11px monospace';
+      ctx.fillText('O_O', vIso.x - 9, vIso.y - 14); // Piercing demonic eyes
+      ctx.fillStyle = '#94a3b8';
+      ctx.font = '14px monospace';
+      ctx.fillText('⚰', vIso.x + 6, vIso.y - 12); // Scythe symbol
 
-      if (keys['KeyW'] || keys['ArrowUp']) moveY += 1.0;
-      if (keys['KeyS'] || keys['ArrowDown']) moveY -= 1.0;
-      if (keys['KeyA']) moveX -= 1.0;
-      if (keys['KeyD']) moveX += 1.0;
-      if (keys['ArrowLeft']) player.yaw -= 2.0 * dt;
-      if (keys['ArrowRight']) player.yaw += 2.0 * dt;
+      // Draw Player (User-1 - Youthful Blogger)
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
+      ctx.beginPath();
+      ctx.ellipse(pIso.x, pIso.y + 10, 10, 5, 0, 0, Math.PI * 2);
+      ctx.fill();
 
-      const mag = Math.hypot(moveX, moveY);
-      if (mag > 1.0) { moveX /= mag; moveY /= mag; }
+      // Beanie & Hoodie Blogger Sprite
+      ctx.fillStyle = '#334155'; // Beanie
+      ctx.fillRect(pIso.x - 5, pIso.y - 24, 10, 6);
+      ctx.fillStyle = '#fed7aa'; // Face
+      ctx.fillRect(pIso.x - 4, pIso.y - 18, 8, 6);
+      ctx.fillStyle = '#3b82f6'; // Streamer Hoodie
+      ctx.fillRect(pIso.x - 6, pIso.y - 12, 12, 14);
+      // Glowing Phone in Hand
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(pIso.x + 5, pIso.y - 8, 4, 6);
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
+      ctx.beginPath();
+      ctx.arc(pIso.x + 7, pIso.y - 5, 16, 0, Math.PI * 2);
+      ctx.fill();
 
-      let moveSpeed = player.speed;
-      const curH = sampleBilinearHeight(player.x, player.y);
-      if (curH < WATER_LEVEL) moveSpeed *= 0.55;
+      ctx.restore();
 
-      const fX = Math.cos(player.yaw), fY = Math.sin(player.yaw);
-      const rX = -Math.sin(player.yaw), rY = Math.cos(player.yaw);
-
-      const vx = (fX * moveY + rX * moveX) * moveSpeed;
-      const vy = (fY * moveY + rY * moveX) * moveSpeed;
-
-      const nx = (player.x + vx * dt) & MAP_MASK;
-      const ny = (player.y + vy * dt) & MAP_MASK;
-      const nextH = sampleBilinearHeight(nx, ny);
-
-      if (nextH - curH < 4.0 || !player.isGrounded) {
-        player.x = nx;
-        player.y = ny;
-      }
-
-      const groundZ = Math.max(nextH, WATER_LEVEL) + player.eyeHeight;
-      player.vz -= 68.0 * dt;
-      player.z += player.vz * dt;
-
-      if (player.z <= groundZ) {
-        player.z = groundZ;
-        player.vz = 0;
-        player.isGrounded = true;
-      } else {
-        player.isGrounded = false;
-      }
-
-      updateTargetRaycast();
+      // Show interaction prompt if near keys or gate
+      const prompt = document.getElementById('interact-prompt');
+      let nearKey = keyObjects.some(k => !k.found && Math.hypot(player.x - k.x, player.y - k.y) < 1.8);
+      let nearGate = Math.hypot(player.x - 21, player.y - 40) < 2.4;
+      prompt.style.display = (nearKey || nearGate) ? 'block' : 'none';
+      if (nearGate) prompt.textContent = "PRESS [E] / TAP [SEARCH] TO UNLOCK UNHOLY GATE";
+      else if (nearKey) prompt.textContent = "PRESS [E] / TAP [SEARCH] TO PICK UP VOW KEY";
     }
 
     /* ==========================================================================
-       11. RESIZE & MAIN LOOP
+       8. MAIN GAME LOOP (Delta Time Normalized)
        ========================================================================== */
-    function resizeDisplay() {
-      screenW = window.innerWidth;
-      screenH = window.innerHeight;
-      canvas.width = screenW;
-      canvas.height = screenH;
-
-      cols = Math.min(160, Math.max(72, Math.floor(screenW / 8.5)));
-      rows = Math.min(76, Math.max(40, Math.floor(screenH / 14.5)));
-
-      cellW = screenW / cols;
-      cellH = screenH / rows;
-
-      charBuffer = new Array(cols * rows);
-      colorBuffer = new Array(cols * rows);
-    }
-    window.addEventListener('resize', resizeDisplay);
-
-    const hudStats = document.getElementById('hud-stats');
-    const hudPos = document.getElementById('hud-pos');
-
     let lastTime = performance.now();
-    let frameCount = 0;
-    let fpsTimer = 0;
-    let fps = 60;
-    let minimapTimer = 0;
 
     function gameLoop(now) {
       const dt = Math.min((now - lastTime) / 1000.0, 0.1);
       lastTime = now;
 
-      updatePhysics(dt);
-      renderRaycastScene(now * 0.001);
-      renderBufferToScreen();
+      if (gameState === 'PLAYING') {
+        // Player Movement input
+        let mx = 0, my = 0;
+        if (keysDown['KeyW'] || keysDown['ArrowUp']) my -= 1;
+        if (keysDown['KeyS'] || keysDown['ArrowDown']) my += 1;
+        if (keysDown['KeyA'] || keysDown['ArrowLeft']) mx -= 1;
+        if (keysDown['KeyD'] || keysDown['ArrowRight']) mx += 1;
 
-      frameCount++;
-      fpsTimer += dt;
-      minimapTimer += dt;
+        if (touchMove.active) {
+          mx = touchMove.x;
+          my = touchMove.y;
+        }
 
-      if (fpsTimer >= 0.5) {
-        fps = Math.round(frameCount / fpsTimer);
-        frameCount = 0;
-        fpsTimer = 0;
-        hudStats.textContent = `ATMOSPHERIC 1024 // FPS: ${fps}`;
-        hudPos.textContent = `POS: (${Math.floor(player.x)}, ${Math.floor(player.y)}) | ALT: ${Math.max(0, Math.floor(player.z - WATER_LEVEL))}m`;
+        const mag = Math.hypot(mx, my);
+        if (mag > 0.1) {
+          const nx = player.x + (mx / mag) * player.speed * dt;
+          const ny = player.y + (my / mag) * player.speed * dt;
+
+          if (mansionMap[Math.floor(player.y) * GRID_W + Math.floor(nx)] !== T_WALL) player.x = nx;
+          if (mansionMap[Math.floor(ny) * GRID_W + Math.floor(player.x)] !== T_WALL) player.y = ny;
+
+          player.angle = Math.atan2(my, mx);
+
+          // Spectral Pit Hazard: Damage / panic buildup
+          if (mansionMap[Math.floor(player.y) * GRID_W + Math.floor(player.x)] === T_PIT) {
+            player.panic = Math.min(1.0, player.panic + dt * 0.5);
+          }
+        }
+
+        // Identify current room
+        ROOMS.forEach(r => {
+          const [x1, y1, x2, y2] = r.bounds;
+          if (player.x >= x1 && player.x <= x2 && player.y >= y1 && player.y <= y2) {
+            document.getElementById('room-name').textContent = `LOCATION: ${r.name}`;
+          }
+        });
+
+        // Chat stream simulation timer
+        chatTimer += dt;
+        if (chatTimer > 4.5) {
+          chatTimer = 0;
+          const u = CHAT_USERS[Math.floor(Math.random() * CHAT_USERS.length)];
+          const c = CHAT_COMMENTS[Math.floor(Math.random() * CHAT_COMMENTS.length)];
+          addChatMessage(u, c);
+          document.getElementById('viewer-count').textContent = `👁 ${(3800 + Math.floor(Math.random() * 800)).toLocaleString()}`;
+        }
+
+        updateAI(dt);
       }
 
-      if (minimapTimer >= 0.15) {
-        updateMinimap();
-        minimapTimer = 0;
-      }
-
+      render();
       requestAnimationFrame(gameLoop);
     }
 
-    generate1024World();
-    resizeDisplay();
+    // Launch game
+    buildMansion();
+    document.getElementById('btn-start').addEventListener('click', () => {
+      initAudio();
+      document.getElementById('modal-screen').style.display = 'none';
+
+      // Reset positions
+      player.x = 21.5; player.y = 37.0;
+      valak.x = 9.5; valak.y = 8.5; valak.state = 'STALK';
+      felix.x = 21.0; felix.y = 36.0;
+      player.keysFound = [false, false, false];
+      keyObjects.forEach(k => k.found = false);
+      document.querySelectorAll('.key-slot').forEach(s => s.classList.remove('found'));
+
+      gameState = 'PLAYING';
+      playFelixSound(false);
+    });
+
     requestAnimationFrame(gameLoop);
   </script>
 </body>
