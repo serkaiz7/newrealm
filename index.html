@@ -3,390 +3,377 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <title>The Mansion of the Unholy Vows // Castle Valak</title>
+  <title>Mansion of the Unholy Vows // 2nd-Person Horror</title>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
       user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
     }
 
-    html, body {
+    body, html {
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #050811;
-      touch-action: none;
-      position: fixed;
+      background-color: #030509;
       font-family: 'Courier New', Courier, monospace;
       color: #9cb3d9;
     }
 
-    #game-canvas {
+    #game-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: radial-gradient(circle at center, #0a0e1a 0%, #020307 100%);
+    }
+
+    canvas {
       display: block;
       width: 100%;
       height: 100%;
-      touch-action: none;
+      object-fit: contain;
+      image-rendering: pixelated;
     }
 
-    /* Gothic Blueprint Top Header */
-    #header-hud {
+    /* CRT Scanline & Grain Filter */
+    .scanlines {
       position: absolute;
-      top: 8px;
-      left: 10px;
-      right: 10px;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.45) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+      background-size: 100% 3px, 6px 100%;
+      z-index: 20;
+    }
+
+    /* Perspective & Status HUD */
+    #hud-layer {
+      position: absolute;
+      top: 0; left: 0; width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12px;
+    }
+
+    .hud-header {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      pointer-events: none;
-      z-index: 20;
-      text-shadow: 0 0 4px #000;
-    }
-
-    .blueprint-panel {
-      background: rgba(6, 10, 22, 0.85);
-      border: 1px solid rgba(80, 140, 220, 0.4);
-      border-radius: 4px;
-      padding: 6px 10px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.7);
-    }
-
-    .title-banner {
       font-size: 11px;
-      letter-spacing: 1.5px;
-      color: #e2e8f0;
       font-weight: bold;
+      letter-spacing: 1px;
+      text-shadow: 0 0 5px rgba(0, 0, 0, 0.9);
     }
 
-    .subtitle-banner {
-      font-size: 9px;
-      color: #60a5fa;
-      letter-spacing: 0.5px;
-    }
-
-    /* Live Streamer Phone HUD Overlay */
-    #stream-hud {
-      position: absolute;
-      top: 60px;
-      left: 10px;
-      width: 175px;
-      background: rgba(10, 15, 30, 0.82);
-      border: 1px solid rgba(239, 68, 68, 0.5);
-      border-radius: 6px;
-      padding: 6px;
-      pointer-events: none;
-      z-index: 20;
-      font-size: 9px;
-    }
-
-    .live-badge {
+    .cam-badge {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      background: #dc2626;
-      color: #fff;
-      font-weight: bold;
-      padding: 1px 5px;
-      border-radius: 3px;
-      font-size: 8px;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: 4px;
+      background: rgba(185, 28, 28, 0.35);
+      border: 1px solid #ef4444;
+      color: #fca5a5;
+      animation: pulseRec 1.5s infinite ease-in-out;
     }
-    .live-dot {
-      width: 6px;
-      height: 6px;
-      background: #fff;
-      border-radius: 50%;
-      animation: pulse 1s infinite alternate;
-    }
-    @keyframes pulse { from { opacity: 0.3; } to { opacity: 1; } }
 
-    #chat-box {
-      margin-top: 5px;
-      height: 62px;
+    .cam-badge.felix {
+      background: rgba(30, 58, 138, 0.45);
+      border-color: #60a5fa;
+      color: #93c5fd;
+    }
+
+    @keyframes pulseRec {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* Live Streamer Phone Overlay */
+    #phone-card {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      width: 220px;
+      height: 145px;
+      background: rgba(8, 12, 22, 0.88);
+      border: 1.5px solid #1e293b;
+      border-radius: 8px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 10px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.8);
+      pointer-events: none;
+    }
+
+    #stream-chat {
+      height: 80px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
       justify-content: flex-end;
-      gap: 3px;
+      gap: 4px;
+      font-size: 9px;
       color: #cbd5e1;
-      font-size: 8.5px;
-      border-top: 1px solid rgba(255,255,255,0.1);
-      padding-top: 4px;
     }
+
     .chat-msg {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      animation: fadeIn 0.3s ease-out;
     }
-    .chat-user { color: #38bdf8; font-weight: bold; }
-    .chat-warn { color: #f87171; font-weight: bold; }
+    .chat-user { color: #f59e0b; font-weight: bold; }
+    .chat-danger { color: #ef4444; font-weight: bold; }
 
-    /* Keys & Objectives Checklist */
-    #objective-hud {
+    /* On-Screen Mobile Touch Controls */
+    #touch-cluster {
       position: absolute;
-      top: 60px;
-      right: 10px;
-      background: rgba(6, 10, 22, 0.85);
-      border: 1px solid rgba(234, 179, 8, 0.45);
-      border-radius: 6px;
-      padding: 6px 10px;
-      font-size: 9.5px;
-      pointer-events: none;
-      z-index: 20;
-      text-shadow: 0 0 3px #000;
-    }
-    .key-slot {
+      bottom: 20px;
+      right: 20px;
       display: flex;
-      align-items: center;
-      gap: 6px;
-      margin: 3px 0;
-      color: #94a3b8;
-    }
-    .key-slot.found {
-      color: #facc15;
-      font-weight: bold;
+      gap: 12px;
+      z-index: 40;
     }
 
-    /* Panic & Heartbeat Meter */
-    #panic-bar-container {
-      width: 100px;
-      height: 6px;
-      background: #1e293b;
-      border: 1px solid #475569;
-      border-radius: 3px;
-      overflow: hidden;
-      margin-top: 4px;
-    }
-    #panic-fill {
-      width: 0%;
-      height: 100%;
-      background: #ef4444;
-      transition: width 0.3s;
-    }
-
-    /* Screen Static & Vignette */
-    #vignette-overlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      box-shadow: inset 0 0 90px rgba(0,0,0,0.88);
-      z-index: 10;
-    }
-    #static-overlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0.05;
-      z-index: 11;
-      background: repeating-radial-gradient(#fff 0 0.0001%, #000 0 0.0002%);
-    }
-
-    /* Interaction Prompt */
-    #interact-prompt {
-      position: absolute;
-      bottom: 125px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.92);
-      border: 1px solid #facc15;
-      padding: 5px 12px;
-      border-radius: 4px;
-      color: #fef08a;
-      font-size: 10.5px;
-      font-weight: bold;
-      pointer-events: none;
-      z-index: 25;
-      display: none;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
-      text-align: center;
-    }
-
-    /* Mobile Controls */
     .touch-btn {
-      position: absolute;
+      width: 58px;
+      height: 58px;
       border-radius: 50%;
+      background: rgba(15, 23, 42, 0.75);
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: #fff;
       font-size: 10px;
       font-weight: bold;
       touch-action: none;
       cursor: pointer;
-      z-index: 30;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.6);
-      border: 1.5px solid rgba(255,255,255,0.3);
     }
-    .touch-btn:active { transform: scale(0.92); }
-
-    #btn-interact {
-      bottom: 24px;
-      right: 20px;
-      width: 66px;
-      height: 66px;
-      background: rgba(234, 179, 8, 0.75);
-      border-color: #facc15;
-    }
-    #btn-felix {
-      bottom: 98px;
-      right: 28px;
-      width: 52px;
-      height: 52px;
-      background: rgba(56, 189, 248, 0.75);
-      border-color: #38bdf8;
-    }
-    #btn-flash {
-      bottom: 24px;
-      right: 96px;
-      width: 54px;
-      height: 54px;
-      background: rgba(147, 51, 234, 0.75);
-      border-color: #c084fc;
+    .touch-btn:active {
+      transform: scale(0.92);
+      background: rgba(220, 38, 38, 0.6);
+      border-color: #ef4444;
     }
 
-    /* Center Overlay Messages (Game Over / Escape) */
-    #modal-screen {
+    /* Start / Game Over Modals */
+    #modal-overlay {
       position: absolute;
-      inset: 0;
-      background: rgba(4, 7, 15, 0.94);
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(2, 4, 10, 0.95);
+      z-index: 100;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      z-index: 50;
-      padding: 20px;
       text-align: center;
+      padding: 24px;
     }
-    #modal-title {
-      font-size: 20px;
-      font-weight: bold;
-      letter-spacing: 2px;
-      margin-bottom: 10px;
+
+    h1 {
+      font-size: 26px;
+      letter-spacing: 3px;
+      color: #f1f5f9;
+      text-shadow: 0 0 12px #dc2626;
+      margin-bottom: 8px;
     }
-    #modal-desc {
-      font-size: 11px;
-      max-width: 380px;
-      line-height: 1.6;
-      color: #cbd5e1;
-      margin-bottom: 20px;
+
+    .subheading {
+      color: #94a3b8;
+      font-size: 13px;
+      margin-bottom: 24px;
+      max-width: 480px;
+      line-height: 1.5;
     }
-    #btn-start {
-      background: #dc2626;
-      border: 1.5px solid #f87171;
+
+    .start-btn {
+      background: #b91c1c;
+      border: 2px solid #ef4444;
       color: #fff;
-      padding: 10px 22px;
-      font-size: 12px;
       font-family: inherit;
+      font-size: 14px;
       font-weight: bold;
+      padding: 12px 28px;
+      border-radius: 6px;
       cursor: pointer;
-      border-radius: 4px;
-      letter-spacing: 1px;
-      box-shadow: 0 4px 15px rgba(220, 38, 38, 0.4);
+      box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+      transition: all 0.2s;
+    }
+    .start-btn:hover {
+      background: #dc2626;
+      box-shadow: 0 0 25px rgba(239, 68, 68, 0.8);
+      transform: scale(1.05);
     }
   </style>
 </head>
 <body>
-  <!-- Atmospheric Overlays -->
-  <div id="vignette-overlay"></div>
-  <div id="static-overlay"></div>
+  <div id="game-container">
+    <div class="scanlines"></div>
 
-  <!-- Top Blueprints HUD -->
-  <div id="header-hud">
-    <div class="blueprint-panel">
-      <div class="title-banner">CASTLE VALAK // DEMONIC STRONGHOLD</div>
-      <div class="subtitle-banner" id="room-name">LOCATION: THE ENTRANCE HALL</div>
+    <div id="hud-layer">
+      <div class="hud-header">
+        <div>
+          <div id="cam-view-tag" class="cam-badge">● STALKER POV // VALAK'S GAZE</div>
+          <div id="room-tag" style="margin-top: 4px; color: #94a3b8;">ROOM: ACCURSED BEDCHAMBER</div>
+        </div>
+        <div style="text-align: right;">
+          <div id="key-tracker" style="color: #fde047;">KEYS: 0 / 3</div>
+          <div id="heart-rate" style="color: #f87171; font-size: 13px; margin-top: 4px;">♥ 78 BPM</div>
+        </div>
+      </div>
+
+      <!-- Phone Stream Card -->
+      <div id="phone-card">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #334155; padding-bottom: 4px;">
+          <span style="color:#ef4444; font-weight:bold;">● LIVE STREAM</span>
+          <span id="viewer-count" style="color:#38bdf8;">14,204 VIEWERS</span>
+        </div>
+        <div id="stream-chat">
+          <div class="chat-msg"><span class="chat-user">GhostGamer:</span> USER-1 IS LIVE IN CASTLE VALAK?!</div>
+          <div class="chat-msg"><span class="chat-user">NightOwl:</span> Yooo find the archivist key and get out!</div>
+        </div>
+        <div style="display: flex; justify-content: space-between; color: #64748b; font-size: 8px;">
+          <span>BATTERY: 82%</span>
+          <span>PHONE V1 // TRIPOD ON</span>
+        </div>
+      </div>
     </div>
-    <div class="blueprint-panel" style="text-align:right;">
-      <div style="font-size:9px; color:#f87171; font-weight:bold;">CURSE LEVEL: 9/10</div>
-      <div style="font-size:8px; color:#94a3b8;">PANIC:</div>
-      <div id="panic-bar-container"><div id="panic-fill"></div></div>
+
+    <!-- On-Screen Action Buttons -->
+    <div id="touch-cluster">
+      <div id="btn-cam" class="touch-btn"><span>👁</span>CAM</div>
+      <div id="btn-action" class="touch-btn"><span>⚿</span>USE</div>
+    </div>
+
+    <canvas id="game-canvas"></canvas>
+
+    <!-- Intro & Game Over Screen -->
+    <div id="modal-overlay">
+      <h1 id="modal-title">MANSION OF THE UNHOLY VOWS</h1>
+      <p id="modal-desc" class="subheading">
+        You are <strong>USER-1</strong>, an urban explorer streaming live inside Castle Valak.<br><br>
+        <strong>A TRUE 2ND-PERSON NIGHTMARE:</strong> You do not see through your own eyes. You control User-1 while looking <em>directly through the eyes of the demonic entity stalking him</em>, or through <strong>Felix the Phantom Cat</strong>.<br><br>
+        Find the <strong>3 Sanctum Keys</strong>, unlock the grand doors in the Entrance Hall, and escape before Valak claims your soul.
+      </p>
+      <button id="modal-btn" class="start-btn">ENTER THE MANSION</button>
     </div>
   </div>
-
-  <!-- Blogger Live Stream UI -->
-  <div id="stream-hud">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-      <span class="live-badge"><span class="live-dot"></span>LIVE</span>
-      <span style="color:#ef4444; font-weight:bold;" id="viewer-count">👁 3,842</span>
-      <span style="color:#38bdf8;" id="battery-level">⚡ 88%</span>
-    </div>
-    <div id="chat-box">
-      <div class="chat-msg"><span class="chat-user">GhostBuster:</span> BRO WHERE ARE YOU?!</div>
-      <div class="chat-msg"><span class="chat-user">Mimi_x:</span> The cat is following you omg 🐈</div>
-      <div class="chat-msg"><span class="chat-warn">HauntAlert:</span> FIND THE 3 KEYS AND GET OUT!</div>
-    </div>
-  </div>
-
-  <!-- Objectives & Key Registry -->
-  <div id="objective-hud">
-    <div style="font-size:8px; color:#eab308; font-weight:bold; margin-bottom:3px;">UNHOLY VOW SEALS [KEYS]</div>
-    <div class="key-slot" id="slot-key1"><span>🗝</span> [1] Archivist's Key</div>
-    <div class="key-slot" id="slot-key2"><span>🗝</span> [2] Chapel Altar Key</div>
-    <div class="key-slot" id="slot-key3"><span>🗝</span> [3] Abbess's Vow Key</div>
-  </div>
-
-  <div id="interact-prompt">PRESS [E] / TAP [INTERACT]</div>
-
-  <!-- Touch Navigation Controls -->
-  <div id="btn-interact" class="touch-btn"><span>🗝</span>SEARCH</div>
-  <div id="btn-felix" class="touch-btn"><span>🐈</span>FELIX</div>
-  <div id="btn-flash" class="touch-btn"><span>⚡</span>STUN</div>
-
-  <!-- Start / Game Over Screen -->
-  <div id="modal-screen">
-    <div id="modal-title" style="color:#ef4444;">THE MANSION OF THE UNHOLY VOWS</div>
-    <div id="modal-desc">
-      You are <b>User-1</b>, a youthful streamer trapped inside Castle Valak.
-      <br><br>
-      <b>VALAK THE UNHOLY NUN</b> stalks the corridors with her spectral scythe.
-      Listen to <b>Felix the Phantom Cat</b>—he will hiss when she is near!
-      <br><br>
-      Locate the <b>3 Unholy Keys</b> across the Chapel, Library, and Abbess Chambers to unlock the Main Entrance and escape alive.
-    </div>
-    <button id="btn-start">BEGIN STREAM // ENTER MANSION</button>
-  </div>
-
-  <canvas id="game-canvas"></canvas>
 
   <script>
     /* ==========================================================================
-       1. WEB AUDIO PROCEDURAL SYNTHESIZER (No External Assets)
+       1. WEB AUDIO API - PROCEDURAL HORROR SOUNDSCAPE (Zero External Audio)
        ========================================================================== */
     let audioCtx = null;
 
     function initAudio() {
       if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        startAmbientDrone();
       }
     }
 
-    // Low-frequency accelerating heartbeat
-    function playHeartbeat(panic) {
+    // Heavy Sub-Bass & Cursed Choir Drone
+    function startAmbientDrone() {
       if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
+      const osc1 = audioCtx.createOscillator();
+      const osc2 = audioCtx.createOscillator();
+      const filter = audioCtx.createBiquadFilter();
       const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(65 + panic * 40, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(35, audioCtx.currentTime + 0.12);
-      gain.gain.setValueAtTime(0.35 + panic * 0.45, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.14);
-      osc.connect(gain);
+
+      osc1.type = 'sawtooth';
+      osc1.frequency.setValueAtTime(46, audioCtx.currentTime); // Low F#
+      osc2.type = 'sine';
+      osc2.frequency.setValueAtTime(47.2, audioCtx.currentTime); // Dissonant beating
+
+      filter.type = 'lowpass';
+      filter.frequency.setValueAtTime(140, audioCtx.currentTime);
+
+      gain.gain.setValueAtTime(0.28, audioCtx.currentTime);
+
+      osc1.connect(filter);
+      osc2.connect(filter);
+      filter.connect(gain);
       gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 0.15);
+
+      osc1.start();
+      osc2.start();
     }
 
-    // Felix the Phantom Cat: Warning Hiss & Guidance Meow
-    function playFelixSound(isHiss = false) {
+    // Heartbeat Sound Synth
+    function playHeartbeat(speed = 1.0) {
       if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(65, now);
+      osc.frequency.exponentialRampToValueAtTime(32, now + 0.15);
+
+      gain.gain.setValueAtTime(0.7, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start(now);
+      osc.stop(now + 0.2);
+    }
+
+    // High Dissonant Violin Screech / Jumpscare
+    function playScareStinger() {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      for (let i = 0; i < 4; i++) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(680 + i * 115 + Math.random() * 50, now);
+        osc.frequency.linearRampToValueAtTime(1200 + Math.random() * 200, now + 0.45);
+
+        gain.gain.setValueAtTime(0.35, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now);
+        osc.stop(now + 0.75);
+      }
+    }
+
+    // Key Collection Chime
+    function playKeyChime() {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      const freqs = [523.25, 659.25, 783.99, 1046.50]; // C Major arpeggio
+      freqs.forEach((f, idx) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(f, now + idx * 0.08);
+        gain.gain.setValueAtTime(0.2, now + idx * 0.08);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.6);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(now + idx * 0.08);
+        osc.stop(now + idx * 0.08 + 0.65);
+      });
+    }
+
+    // Felix Cat Meow / Hiss warning
+    function playCatSound(isHiss = false) {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
       if (isHiss) {
-        // High filtered noise hiss
-        const bufferSize = audioCtx.sampleRate * 0.4;
+        // Noise buffer hiss
+        const bufferSize = audioCtx.sampleRate * 0.3;
         const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
         const data = buffer.getChannelData(0);
         for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
@@ -394,283 +381,223 @@
         noise.buffer = buffer;
         const filter = audioCtx.createBiquadFilter();
         filter.type = 'bandpass';
-        filter.frequency.value = 3200;
+        filter.frequency.setValueAtTime(3200, now);
         const gain = audioCtx.createGain();
-        gain.gain.setValueAtTime(0.35, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.38);
+        gain.gain.setValueAtTime(0.25, now);
+        gain.gain.exponentialRampToValueAtTime(0.01, now + 0.28);
         noise.connect(filter);
         filter.connect(gain);
         gain.connect(audioCtx.destination);
-        noise.start();
+        noise.start(now);
       } else {
-        // Ghostly caterwaul / meow
         const osc = audioCtx.createOscillator();
         const gain = audioCtx.createGain();
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(650, audioCtx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.18);
-        osc.frequency.exponentialRampToValueAtTime(520, audioCtx.currentTime + 0.45);
-        gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.45);
+        osc.frequency.setValueAtTime(580, now);
+        osc.frequency.exponentialRampToValueAtTime(840, now + 0.15);
+        osc.frequency.exponentialRampToValueAtTime(420, now + 0.35);
+        gain.gain.setValueAtTime(0.2, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
         osc.connect(gain);
         gain.connect(audioCtx.destination);
-        osc.start();
-        osc.stop(audioCtx.currentTime + 0.46);
+        osc.start(now);
+        osc.stop(now + 0.4);
       }
     }
 
-    // Terrifying Valak Presence Stinger / Shriek
-    function playValakShriek() {
-      if (!audioCtx) return;
-      const osc1 = audioCtx.createOscillator();
-      const osc2 = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc1.type = 'sawtooth';
-      osc2.type = 'square';
-      osc1.frequency.setValueAtTime(850, audioCtx.currentTime);
-      osc1.frequency.linearRampToValueAtTime(220, audioCtx.currentTime + 0.8);
-      osc2.frequency.setValueAtTime(890, audioCtx.currentTime);
-      osc2.frequency.linearRampToValueAtTime(200, audioCtx.currentTime + 0.8);
-      gain.gain.setValueAtTime(0.5, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.85);
-      osc1.connect(gain);
-      osc2.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc1.start(); osc2.start();
-      osc1.stop(audioCtx.currentTime + 0.9);
-      osc2.stop(audioCtx.currentTime + 0.9);
-    }
-
-    // Key chime / pickup sound
-    function playChime() {
-      if (!audioCtx) return;
-      [523, 659, 783, 1046].forEach((freq, idx) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.18, audioCtx.currentTime + idx * 0.08);
-        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + idx * 0.08 + 0.4);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(audioCtx.currentTime + idx * 0.08);
-        osc.stop(audioCtx.currentTime + idx * 0.08 + 0.45);
-      });
-    }
-
     /* ==========================================================================
-       2. MANSION ARCHITECTURE & REFERENCE MAP (Castle Valak)
+       2. MANSION MAP BLUEPRINT & LEVEL DATA
        ========================================================================== */
-    // Tile Types
-    const T_FLOOR = 0;
-    const T_WALL  = 1;
-    const T_PIT   = 2;  // Spectral Pit (Damage / Panic)
-    const T_FOUNT = 3;  // Blood Fountain
-    const T_CROSS = 4;  // Desecrated Altar Cross
-    const T_BOOK  = 5;  // Library Bookshelves
-    const T_GATE  = 6;  // Unholy Ward Grand Gate (Exit)
+    // Floorplan Layout: 5 Distinct Gothic Zones based on References 1 & 2
+    const ROOMS = {
+      BEDCHAMBER: { id: 0, name: "ABBESS'S CURSED BEDCHAMBER", x: 1, y: 0, w: 10, h: 8 },
+      LIBRARY:    { id: 1, name: "LIBRARY OF FORBIDDEN TEXTS",  x: 12, y: 0, w: 12, h: 8 },
+      CHAPEL:     { id: 2, name: "THE DESECRATED CHAPEL",       x: 1, y: 9, w: 10, h: 10 },
+      OSSUARY:    { id: 3, name: "THE OSSUARY & CATACOMBS",     x: 12, y: 9, w: 12, h: 10 },
+      ENTRANCE:   { id: 4, name: "GRAND ENTRANCE HALL (EXIT)",  x: 6, y: 20, w: 14, h: 7 }
+    };
 
-    const GRID_W = 42;
-    const GRID_H = 42;
-    const mansionMap = new Uint8Array(GRID_W * GRID_H);
+    const MAP_COLS = 26;
+    const MAP_ROWS = 28;
+    const TILE_SIZE = 32;
 
-    // Mansion Rooms Definition (Directly from Ref 1 & 2)
-    const ROOMS = [
-      { id: 1, name: "THE ENTRANCE HALL", bounds: [16, 28, 26, 40] },
-      { id: 2, name: "THE DESECRATED CHAPEL", bounds: [3, 4, 16, 22] },
-      { id: 3, name: "THE LIBRARY OF FORBIDDEN TEXTS", bounds: [26, 4, 38, 22] },
-      { id: 4, name: "THE ABBESS'S CHAMBERS", bounds: [28, 26, 39, 39] },
-      { id: 5, name: "THE CATACOMBS & OSSUARY", bounds: [3, 26, 14, 39] }
-    ];
+    // Tile Types: 0 = Empty, 1 = Stone Wall, 2 = Floor, 3 = Door, 4 = Exit Gate, 5 = Altar/Pew
+    const worldGrid = new Uint8Array(MAP_COLS * MAP_ROWS);
 
-    function buildMansion() {
-      mansionMap.fill(T_WALL);
+    function setTile(x, y, t) {
+      if (x >= 0 && x < MAP_COLS && y >= 0 && y < MAP_ROWS) {
+        worldGrid[y * MAP_COLS + x] = t;
+      }
+    }
+    function getTile(x, y) {
+      if (x < 0 || x >= MAP_COLS || y < 0 || y >= MAP_ROWS) return 1;
+      return worldGrid[y * MAP_COLS + x];
+    }
 
-      // Carve out rooms
-      ROOMS.forEach(r => {
-        const [x1, y1, x2, y2] = r.bounds;
-        for (let y = y1; y <= y2; y++) {
-          for (let x = x1; x <= x2; x++) {
-            if (x === x1 || x === x2 || y === y1 || y === y2) {
-              mansionMap[y * GRID_W + x] = T_WALL;
+    // Build the Gothic blueprint walls and doors
+    function buildMansionArchitecture() {
+      // Clear with solid rock
+      worldGrid.fill(1);
+
+      // Hollow out rooms
+      Object.values(ROOMS).forEach(r => {
+        for (let py = r.y; py < r.y + r.h; py++) {
+          for (let px = r.x; px < r.x + r.w; px++) {
+            if (py === r.y || py === r.y + r.h - 1 || px === r.x || px === r.x + r.w - 1) {
+              setTile(px, py, 1); // Wall border
             } else {
-              mansionMap[y * GRID_W + x] = T_FLOOR;
+              setTile(px, py, 2); // Stone Floor
             }
           }
         }
       });
 
-      // Carve interconnecting hallways
-      function carveH(x1, x2, y) {
-        for (let x = Math.min(x1, x2); x <= Math.max(x1, x2); x++) {
-          mansionMap[y * GRID_W + x] = T_FLOOR;
-          mansionMap[(y-1) * GRID_W + x] = T_FLOOR;
-        }
-      }
-      function carveV(y1, y2, x) {
-        for (let y = Math.min(y1, y2); y <= Math.max(y1, y2); y++) {
-          mansionMap[y * GRID_W + x] = T_FLOOR;
-          mansionMap[y * GRID_W + (x+1)] = T_FLOOR;
-        }
-      }
+      // Corridor doorways connecting rooms
+      setTile(11, 4, 3); // Bedchamber <-> Library
+      setTile(5, 8, 3);  // Bedchamber <-> Chapel
+      setTile(18, 8, 3); // Library <-> Ossuary
+      setTile(5, 19, 3); // Chapel <-> Entrance Hall
+      setTile(18, 19, 3);// Ossuary <-> Entrance Hall
 
-      // Hallway: Entrance -> Chapel & Library
-      carveV(22, 28, 21);
-      carveH(10, 32, 23);
-      carveV(18, 23, 10); // to Chapel
-      carveV(18, 23, 32); // to Library
-      carveH(14, 16, 33); // Entrance -> Catacombs
-      carveH(26, 28, 33); // Entrance -> Abbess Chambers
+      // Grand Exit Sanctum Gates (Bottom of Entrance Hall)
+      setTile(12, 26, 4);
+      setTile(13, 26, 4);
 
-      // Add Key Props & Traps from Reference sheets:
-      // Entrance: Main Locked Exit Gate & Blood Fountain
-      mansionMap[40 * GRID_W + 21] = T_GATE;
-      mansionMap[34 * GRID_W + 21] = T_FOUNT;
+      // Add Gothic pillars, statues, and pews
+      setTile(4, 13, 5); setTile(7, 13, 5); // Chapel pews
+      setTile(4, 15, 5); setTile(7, 15, 5);
+      setTile(5, 11, 5); // Chapel Unholy Altar
 
-      // Chapel: Desecrated Altars & Spectral Pits
-      mansionMap[6 * GRID_W + 9] = T_CROSS;
-      mansionMap[7 * GRID_W + 9] = T_CROSS;
-      mansionMap[12 * GRID_W + 8] = T_PIT;
-      mansionMap[12 * GRID_W + 11] = T_PIT;
+      setTile(15, 3, 5); setTile(18, 3, 5); setTile(21, 3, 5); // Library Bookcases
+      setTile(15, 5, 5); setTile(18, 5, 5); setTile(21, 5, 5);
 
-      // Library: Towering bookshelves
-      for (let y = 7; y <= 19; y += 3) {
-        for (let x = 29; x <= 35; x += 3) {
-          mansionMap[y * GRID_W + x] = T_BOOK;
-          mansionMap[(y+1) * GRID_W + x] = T_BOOK;
-        }
-      }
-
-      // Catacombs: Bone Pits & Skeletons
-      mansionMap[31 * GRID_W + 8] = T_PIT;
-      mansionMap[34 * GRID_W + 10] = T_PIT;
+      setTile(15, 13, 5); setTile(18, 13, 5); // Ossuary Skull Piles
+      setTile(15, 16, 5); setTile(18, 16, 5);
     }
 
     /* ==========================================================================
-       3. CHARACTERS & SURVIVAL ENTITIES
+       3. CHARACTERS: USER-1 (Blogger), VALAK (The Nun), & FELIX (The Ghost Cat)
        ========================================================================== */
-    // Protagonist: User-1 (Youthful Blogger)
-    const player = {
-      x: 21.5,
-      y: 37.0,
-      angle: -Math.PI / 2,
-      speed: 3.6,
-      phoneBattery: 100.0,
-      flashlightOn: true,
-      panic: 0.0,
-      keysFound: [false, false, false]
+    const user = {
+      x: 3.5 * TILE_SIZE,
+      y: 4.5 * TILE_SIZE,
+      angle: 0,
+      speed: 2.2,
+      lightRadius: 180,
+      sprinting: false
     };
 
-    // Stalker Nemesis: Valak (The Unholy Nun)
     const valak = {
-      x: 9.5,
-      y: 8.5,
-      angle: 0,
-      speed: 2.3,
-      state: 'STALK', // 'STALK', 'HUNT', 'STUNNED'
-      stunTimer: 0,
-      alertTimer: 0,
-      shriekCooldown: 0
+      x: 18.5 * TILE_SIZE,
+      y: 14.5 * TILE_SIZE,
+      angle: Math.PI,
+      speed: 1.6,
+      state: 'STALK', // STALK, HUNT, CHASE
+      huntTimer: 0,
+      viewRange: 280,
+      breathTimer: 0
     };
 
-    // Ghost Companion: Felix (The Phantom Feline)
     const felix = {
-      x: 21.0,
-      y: 36.0,
+      x: 4.5 * TILE_SIZE,
+      y: 3.5 * TILE_SIZE,
       angle: 0,
-      targetX: 21.0,
-      targetY: 36.0,
-      distractedNun: false,
-      hissCooldown: 0
+      targetX: 4.5 * TILE_SIZE,
+      targetY: 3.5 * TILE_SIZE
     };
 
-    // Interactable Objects: 3 Unholy Keys
-    const keyObjects = [
-      { id: 0, name: "Archivist's Key", x: 35.5, y: 8.5, found: false, room: "Library" },
-      { id: 1, name: "Chapel Altar Key", x: 9.5, y: 5.5, found: false, room: "Chapel" },
-      { id: 2, name: "Abbess's Vow Key", x: 35.5, y: 34.5, found: false, room: "Chambers" }
+    // 3 Hidden Sanctum Keys (Matching References 1 & 2)
+    const keys = [
+      { id: 1, name: "Archivist's Key", room: "Library", x: 21.5 * TILE_SIZE, y: 2.5 * TILE_SIZE, collected: false, color: "#38bdf8" },
+      { id: 2, name: "Desecrated Chapel Key", room: "Chapel", x: 5.5 * TILE_SIZE, y: 11.5 * TILE_SIZE, collected: false, color: "#facc15" },
+      { id: 3, name: "Ossuary Bone Key", room: "Ossuary", x: 20.5 * TILE_SIZE, y: 15.5 * TILE_SIZE, collected: false, color: "#f87171" }
     ];
+
+    let keysCollectedCount = 0;
+    let cameraMode = 'VALAK'; // 'VALAK' (2nd-person hunter) or 'FELIX' (2nd-person familiar)
+    let gameState = 'INTRO';   // INTRO, PLAYING, GAMEOVER, ESCAPED
 
     /* ==========================================================================
-       4. ISOMETRIC 3RD-PERSON RENDERING ENGINE (ASCII Blueprint Aesthetics)
+       4. 2ND-PERSON DYNAMIC CAMERA ENGINE
        ========================================================================== */
-    const canvas = document.getElementById('game-canvas');
-    const ctx = canvas.getContext('2d');
-    let screenW = 0, screenH = 0;
+    // The camera is an embodied physical entity in the world watching User-1
+    const camera = {
+      x: valak.x,
+      y: valak.y,
+      fov: 1.45,
+      zoom: 1.0
+    };
 
-    // Isometric Projection transforms
-    const TILE_W = 48;
-    const TILE_H = 24;
-    const WALL_H = 44;
-
-    function worldToIso(wx, wy) {
-      return {
-        x: (wx - wy) * (TILE_W * 0.5),
-        y: (wx + wy) * (TILE_H * 0.5)
-      };
-    }
-
-    function resize() {
-      screenW = window.innerWidth;
-      screenH = window.innerHeight;
-      canvas.width = screenW;
-      canvas.height = screenH;
-    }
-    window.addEventListener('resize', resize);
-    resize();
-
-    // Stream Chat Generator
-    const CHAT_USERS = ['GhostStalker', 'HorrorQueen', 'CryptidWatcher', 'VlogSquad', 'NunBeliever', 'PixelKnight'];
-    const CHAT_COMMENTS = [
-      "THE WALLS HAVE FACES IN THEM WTF",
-      "Did you hear that dragging sound??",
-      "USE FELIX TO DISTRACT HER!!",
-      "Check the altar pews!",
-      "YOUR FLASHLIGHT IS FLICKERING",
-      "VALAK IS IN THE HALLWAY RUNNN",
-      "Bro don't go into the catacombs without the key",
-      "The nun is right behind you omg 😱"
-    ];
-    let chatTimer = 0;
-
-    function addChatMessage(user, msg, isWarn = false) {
-      const box = document.getElementById('chat-box');
-      const div = document.createElement('div');
-      div.className = 'chat-msg';
-      div.innerHTML = `<span class="${isWarn ? 'chat-warn' : 'chat-user'}">${user}:</span> ${msg}`;
-      box.appendChild(div);
-      if (box.children.length > 5) box.removeChild(box.firstChild);
+    function updateCamera(dt) {
+      if (cameraMode === 'VALAK') {
+        // Smoothly interpolates to Valak's eye position and looks toward User-1
+        camera.x += (valak.x - camera.x) * 0.15;
+        camera.y += (valak.y - camera.y) * 0.15;
+      } else {
+        // Felix's agile vantage viewpoint
+        camera.x += (felix.x - camera.x) * 0.15;
+        camera.y += (felix.y - camera.y) * 0.15;
+      }
     }
 
     /* ==========================================================================
-       5. INPUT & MULTI-TOUCH CONTROLLER
+       5. PLAYER & ENEMY AI SIMULATION
        ========================================================================== */
-    const keysDown = {};
-    const touchMove = { x: 0, y: 0, active: false };
+    const input = { up: false, down: false, left: false, right: false, action: false, run: false };
 
+    // Keyboard handlers
     window.addEventListener('keydown', (e) => {
-      keysDown[e.code] = true;
-      if (e.code === 'KeyE' || e.code === 'Space') handleInteraction();
-      if (e.code === 'KeyC') commandFelix();
-      if (e.code === 'KeyF') triggerFlashStun();
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') input.up = true;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') input.down = true;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') input.left = true;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') input.right = true;
+      if (e.code === 'KeyE' || e.code === 'Space') interactAction();
+      if (e.code === 'KeyC') toggleCamera();
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = true;
     });
-    window.addEventListener('keyup', (e) => { keysDown[e.code] = false; });
 
-    // Touch Virtual Joystick on Left Screen Half
-    let joyTouchId = null;
-    let joyBaseX = 0, joyBaseY = 0;
-    const JOY_RADIUS = 48.0;
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'KeyW' || e.code === 'ArrowUp') input.up = false;
+      if (e.code === 'KeyS' || e.code === 'ArrowDown') input.down = false;
+      if (e.code === 'KeyA' || e.code === 'ArrowLeft') input.left = false;
+      if (e.code === 'KeyD' || e.code === 'ArrowRight') input.right = false;
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.run = false;
+    });
+
+    // Touch Action Buttons
+    const btnAction = document.getElementById('btn-action');
+    const btnCam = document.getElementById('btn-cam');
+
+    btnAction.addEventListener('pointerdown', (e) => { e.preventDefault(); interactAction(); });
+    btnCam.addEventListener('pointerdown', (e) => { e.preventDefault(); toggleCamera(); });
+
+    function toggleCamera() {
+      cameraMode = cameraMode === 'VALAK' ? 'FELIX' : 'VALAK';
+      const badge = document.getElementById('cam-view-tag');
+      if (cameraMode === 'VALAK') {
+        badge.textContent = "● STALKER POV // VALAK'S GAZE";
+        badge.classList.remove('felix');
+        playHeartbeat(1.4);
+      } else {
+        badge.textContent = "● ASTRAL SPECTER // FELIX'S EYES";
+        badge.classList.add('felix');
+        playCatSound(false);
+      }
+    }
+
+    // Touch Virtual D-Pad on Canvas Left Half
+    const canvas = document.getElementById('game-canvas');
+    let touchMoveId = null;
+    let touchBaseX = 0, touchBaseY = 0;
 
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      const halfW = window.innerWidth * 0.5;
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
-        if (t.clientX < halfW && joyTouchId === null) {
-          joyTouchId = t.identifier;
-          joyBaseX = t.clientX;
-          joyBaseY = t.clientY;
-          touchMove.active = true;
+        if (t.clientX < window.innerWidth * 0.5 && touchMoveId === null) {
+          touchMoveId = t.identifier;
+          touchBaseX = t.clientX;
+          touchBaseY = t.clientY;
         }
       }
     }, { passive: false });
@@ -679,472 +606,497 @@
       e.preventDefault();
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
-        if (t.identifier === joyTouchId) {
-          const dx = t.clientX - joyBaseX;
-          const dy = t.clientY - joyBaseY;
-          const dist = Math.hypot(dx, dy);
-          const rad = Math.min(dist, JOY_RADIUS);
-          const angle = Math.atan2(dy, dx);
-          touchMove.x = (Math.cos(angle) * rad) / JOY_RADIUS;
-          touchMove.y = (Math.sin(angle) * rad) / JOY_RADIUS;
+        if (t.identifier === touchMoveId) {
+          const dx = t.clientX - touchBaseX;
+          const dy = t.clientY - touchBaseY;
+          input.right = dx > 15;
+          input.left = dx < -15;
+          input.down = dy > 15;
+          input.up = dy < -15;
         }
       }
     }, { passive: false });
 
-    function endTouch(e) {
+    function resetTouch(e) {
       for (let i = 0; i < e.changedTouches.length; i++) {
-        if (e.changedTouches[i].identifier === joyTouchId) {
-          joyTouchId = null;
-          touchMove.active = false;
-          touchMove.x = 0;
-          touchMove.y = 0;
+        if (e.changedTouches[i].identifier === touchMoveId) {
+          touchMoveId = null;
+          input.up = input.down = input.left = input.right = false;
         }
       }
     }
-    canvas.addEventListener('touchend', endTouch, { passive: false });
-    canvas.addEventListener('touchcancel', endTouch, { passive: false });
+    canvas.addEventListener('touchend', resetTouch, { passive: false });
+    canvas.addEventListener('touchcancel', resetTouch, { passive: false });
 
-    // Action button listeners
-    document.getElementById('btn-interact').addEventListener('pointerdown', (e) => { e.preventDefault(); handleInteraction(); });
-    document.getElementById('btn-felix').addEventListener('pointerdown', (e) => { e.preventDefault(); commandFelix(); });
-    document.getElementById('btn-flash').addEventListener('pointerdown', (e) => { e.preventDefault(); triggerFlashStun(); });
+    // Wall Collision Check
+    function checkCollision(px, py, radius = 10) {
+      const minTx = Math.floor((px - radius) / TILE_SIZE);
+      const maxTx = Math.floor((px + radius) / TILE_SIZE);
+      const minTy = Math.floor((py - radius) / TILE_SIZE);
+      const maxTy = Math.floor((py + radius) / TILE_SIZE);
+
+      for (let ty = minTy; ty <= maxTy; ty++) {
+        for (let tx = minTx; tx <= maxTx; tx++) {
+          const t = getTile(tx, ty);
+          if (t === 1 || t === 5) return true; // Solid Wall or Heavy Altar
+          if (t === 4 && keysCollectedCount < 3) return true; // Sealed Gates
+        }
+      }
+      return false;
+    }
+
+    // Action Key (Collect Keys, Unlock Doors)
+    function interactAction() {
+      if (gameState !== 'PLAYING') return;
+
+      // Check proximity to keys
+      keys.forEach(k => {
+        if (!k.collected) {
+          const dist = Math.hypot(user.x - k.x, user.y - k.y);
+          if (dist < 36) {
+            k.collected = true;
+            keysCollectedCount++;
+            playKeyChime();
+            addChatMessage("GhostGamer", `HE GOT THE ${k.name.toUpperCase()}! 2ND-CAM CONFIRMED!`);
+            document.getElementById('key-tracker').textContent = `KEYS: ${keysCollectedCount} / 3`;
+            if (keysCollectedCount === 3) {
+              addChatMessage("Mod_Sarah", "THE SANCTUM SEALS ARE BROKEN! RUN TO ENTRANCE HALL GATES!");
+            }
+          }
+        }
+      });
+
+      // Check proximity to Exit Gate
+      const exitDist = Math.hypot(user.x - 12.5 * TILE_SIZE, user.y - 26 * TILE_SIZE);
+      if (exitDist < 48) {
+        if (keysCollectedCount >= 3) {
+          gameState = 'ESCAPED';
+          showModal("YOU ESCAPED CASTLE VALAK!", "With all 3 Sanctum Keys collected, you broke the unholy seals and fled into the mist as 24,000 live viewers cheered. The nun's whispers fade behind you.", "REPLAY LIVE STREAM");
+        } else {
+          addChatMessage("System", "THE GATES ARE SEALED WITH BLOOD. 3 KEYS REQUIRED.");
+        }
+      }
+    }
 
     /* ==========================================================================
-       6. CORE GAMEPLAY LOGIC & AI
+       6. VALAK AI (STALKER BEHAVIOR & SANITY TRACKER)
        ========================================================================== */
-    let gameState = 'START';
     let heartbeatTimer = 0;
 
-    function handleInteraction() {
-      if (gameState !== 'PLAYING') return;
+    function updateValakAI(dt) {
+      const distToUser = Math.hypot(user.x - valak.x, user.y - valak.y);
+      valak.angle = Math.atan2(user.y - valak.y, user.x - valak.x);
 
-      // Check proximity to unholy keys
-      keyObjects.forEach(k => {
-        if (!k.found && Math.hypot(player.x - k.x, player.y - k.y) < 1.8) {
-          k.found = true;
-          player.keysFound[k.id] = true;
-          playChime();
-          document.getElementById(`slot-key${k.id + 1}`).classList.add('found');
-          addChatMessage('STREAM_SYSTEM', `UNLOCKED: ${k.name.toUpperCase()}!`, true);
-        }
-      });
-
-      // Check proximity to exit gate
-      if (Math.hypot(player.x - 21, player.y - 40) < 2.4) {
-        if (player.keysFound.every(Boolean)) {
-          triggerVictory();
-        } else {
-          addChatMessage('WARD', 'The Unholy Gate is sealed by 3 missing Vow Keys!', true);
+      // Line of Sight Raycast check
+      let hasSight = true;
+      const raySteps = Math.floor(distToUser / 16);
+      for (let s = 1; s < raySteps; s++) {
+        const rx = valak.x + Math.cos(valak.angle) * s * 16;
+        const ry = valak.y + Math.sin(valak.angle) * s * 16;
+        if (getTile(Math.floor(rx / TILE_SIZE), Math.floor(ry / TILE_SIZE)) === 1) {
+          hasSight = false;
+          break;
         }
       }
-    }
 
-    function commandFelix() {
-      if (gameState !== 'PLAYING') return;
-      playFelixSound(false);
-
-      // Find nearest unfound key to guide player
-      let targetKey = keyObjects.find(k => !k.found);
-      if (targetKey) {
-        felix.targetX = targetKey.x + (Math.random() - 0.5) * 1.5;
-        felix.targetY = targetKey.y + (Math.random() - 0.5) * 1.5;
-        addChatMessage('Felix', 'Meows softly and points his ghostly tail forward...');
+      // Valak State Machine: STALK -> CHASE
+      if (distToUser < valak.viewRange && hasSight) {
+        if (valak.state !== 'CHASE') {
+          valak.state = 'CHASE';
+          valak.speed = 2.45;
+          playScareStinger();
+          addChatMessage("Viewer_99", "VALAK SEES HIM! SHE IS RAISING THE SCYTHE!! RUN!!!");
+        }
       } else {
-        // Felix distracts Valak away
-        felix.targetX = valak.x + (Math.random() - 0.5) * 4.0;
-        felix.targetY = valak.y + (Math.random() - 0.5) * 4.0;
-        addChatMessage('Felix', 'Runs into the corridor to draw the Nun away!', true);
-      }
-    }
-
-    function triggerFlashStun() {
-      if (gameState !== 'PLAYING' || player.phoneBattery < 25) return;
-      player.phoneBattery = Math.max(0, player.phoneBattery - 25);
-      document.getElementById('battery-level').textContent = `⚡ ${Math.floor(player.phoneBattery)}%`;
-
-      // Full screen white camera flash
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, screenW, screenH);
-
-      // Stun Valak if in range and line of sight
-      const distToNun = Math.hypot(player.x - valak.x, player.y - valak.y);
-      if (distToNun < 8.0) {
-        valak.state = 'STUNNED';
-        valak.stunTimer = 4.5;
-        playValakShriek();
-        addChatMessage('FLASH', 'VALAK WAS BLINDED BY YOUR PHONE CAMERA FLASH!', true);
-      }
-    }
-
-    function updateAI(dt) {
-      // 1. Felix AI
-      const fdx = felix.targetX - felix.x;
-      const fdy = felix.targetY - felix.y;
-      const fdist = Math.hypot(fdx, fdy);
-      if (fdist > 0.4) {
-        felix.x += (fdx / fdist) * 3.8 * dt;
-        felix.y += (fdy / fdist) * 3.8 * dt;
-        felix.angle = Math.atan2(fdy, fdx);
-      } else {
-        // Follow closely behind Blogger
-        felix.targetX = player.x - Math.cos(player.angle) * 1.2;
-        felix.targetY = player.y - Math.sin(player.angle) * 1.2;
+        valak.state = 'STALK';
+        valak.speed = 1.35;
       }
 
-      // Felix hiss when Valak is within 8 units
-      const felixToNun = Math.hypot(felix.x - valak.x, felix.y - valak.y);
-      felix.hissCooldown -= dt;
-      if (felixToNun < 8.0 && felix.hissCooldown <= 0) {
-        playFelixSound(true);
-        felix.hissCooldown = 4.0;
-        addChatMessage('Felix', 'HISSSSSS! (Valak is right around the corner!)', true);
-      }
+      // Move Valak toward User-1
+      const vx = Math.cos(valak.angle) * valak.speed;
+      const vy = Math.sin(valak.angle) * valak.speed;
 
-      // 2. Valak Stalker AI
-      const distToPlayer = Math.hypot(player.x - valak.x, player.y - valak.y);
+      if (!checkCollision(valak.x + vx, valak.y, 14)) valak.x += vx;
+      if (!checkCollision(valak.x, valak.y + vy, 14)) valak.y += vy;
 
-      if (valak.state === 'STUNNED') {
-        valak.stunTimer -= dt;
-        if (valak.stunTimer <= 0) valak.state = 'STALK';
-      } else {
-        // Check Line-of-sight & Hearing
-        const canSee = distToPlayer < 9.0;
-        if (canSee) {
-          valak.state = 'HUNT';
-          valak.speed = 3.2;
-          valak.shriekCooldown -= dt;
-          if (valak.shriekCooldown <= 0) {
-            playValakShriek();
-            valak.shriekCooldown = 7.0;
-          }
-        } else {
-          valak.state = 'STALK';
-          valak.speed = 1.9;
-        }
-
-        // Target coordinates: player, or distracted by Felix
-        const targetX = player.x;
-        const targetY = player.y;
-
-        const vdx = targetX - valak.x;
-        const vdy = targetY - valak.y;
-        const vdist = Math.hypot(vdx, vdy);
-
-        if (vdist > 0.5) {
-          const nx = valak.x + (vdx / vdist) * valak.speed * dt;
-          const ny = valak.y + (vdy / vdist) * valak.speed * dt;
-          // Simple collision check
-          if (mansionMap[Math.floor(ny) * GRID_W + Math.floor(nx)] !== T_WALL) {
-            valak.x = nx;
-            valak.y = ny;
-          }
-          valak.angle = Math.atan2(vdy, vdx);
-        }
-
-        // Jumpscare caught condition
-        if (distToPlayer < 0.9) {
-          triggerGameOver();
-        }
-      }
-
-      // 3. Player Panic & Heartbeat
-      player.panic = Math.max(0, Math.min(1.0, 1.0 - (distToPlayer / 12.0)));
-      document.getElementById('panic-fill').style.width = `${Math.floor(player.panic * 100)}%`;
-
-      heartbeatTimer += dt * (1.0 + player.panic * 2.5);
-      if (heartbeatTimer > 1.2) {
+      // Heartbeat dynamics based on proximity
+      heartbeatTimer += dt;
+      const bpmInterval = Math.max(0.35, Math.min(1.2, (distToUser / 300)));
+      if (heartbeatTimer > bpmInterval) {
         heartbeatTimer = 0;
-        playHeartbeat(player.panic);
+        playHeartbeat();
+        const bpm = Math.floor(180 - (distToUser / 300) * 100);
+        document.getElementById('heart-rate').textContent = `♥ ${Math.max(74, Math.min(185, bpm))} BPM`;
+      }
+
+      // Jumpscare Death Collision
+      if (distToUser < 22 && gameState === 'PLAYING') {
+        gameState = 'GAMEOVER';
+        playScareStinger();
+        showModal("STREAM DISCONNECTED: CAUGHT", "Valak the Unholy Nun severed your connection with the Accursed Scythe. Your footage remains buried inside Castle Valak.", "TRY AGAIN");
       }
     }
 
-    function triggerGameOver() {
-      gameState = 'DEAD';
-      playValakShriek();
-      const modal = document.getElementById('modal-screen');
-      const title = document.getElementById('modal-title');
-      const desc = document.getElementById('modal-desc');
-      const btn = document.getElementById('btn-start');
+    // Felix the Phantom Cat Companion AI
+    function updateFelixAI(dt) {
+      // Felix stays between User and the nearest key or guides User
+      const distToUser = Math.hypot(user.x - felix.x, user.y - felix.y);
+      if (distToUser > 80) {
+        const angle = Math.atan2(user.y - felix.y, user.x - felix.x);
+        felix.x += Math.cos(angle) * 2.8;
+        felix.y += Math.sin(angle) * 2.8;
+      }
 
-      title.textContent = "STREAM OFFLINE // SLAIN BY VALAK";
-      title.style.color = "#dc2626";
-      desc.innerHTML = "Valak severed your live stream with her spectral scythe.<br>Your skull joins the Ossuary.";
-      btn.textContent = "RESPAWN // RETRY";
-      modal.style.display = 'flex';
-    }
-
-    function triggerVictory() {
-      gameState = 'ESCAPED';
-      playChime();
-      const modal = document.getElementById('modal-screen');
-      const title = document.getElementById('modal-title');
-      const desc = document.getElementById('modal-desc');
-      const btn = document.getElementById('btn-start');
-
-      title.textContent = "STREAM ESCAPED // 1.2M VIEWERS";
-      title.style.color = "#22c55e";
-      desc.innerHTML = "You unlocked all 3 Unholy Vows and escaped Castle Valak with Felix!<br>The footage has gone viral worldwide.";
-      btn.textContent = "PLAY AGAIN";
-      modal.style.display = 'flex';
+      // Felix hisses when Valak is within striking distance
+      const distToValak = Math.hypot(valak.x - felix.x, valak.y - felix.y);
+      if (distToValak < 120 && Math.random() < 0.015) {
+        playCatSound(true);
+        addChatMessage("FelixFan", "FELIX IS HISSING! THE NUN IS ON YOUR TAIL!!");
+      }
     }
 
     /* ==========================================================================
-       7. GRAPHICAL RENDERING (Isometric Gothic ASCII / Pixel Art)
+       7. GRAPHICS & 2ND-PERSON RENDER PIPELINE
        ========================================================================== */
+    const ctx = canvas.getContext('2d');
+    let screenW = 0, screenH = 0;
+
+    function resize() {
+      screenW = canvas.width = window.innerWidth;
+      screenH = canvas.height = window.innerHeight;
+      ctx.imageSmoothingEnabled = false;
+    }
+    window.addEventListener('resize', resize);
+
+    // Live Stream Panicked Chat System
+    const chatContainer = document.getElementById('stream-chat');
+    const randomChatters = ["SpookyStreamer", "NunHunter666", "DarkWebCrawler", "PixelMage", "ExorcistTV", "CatWhisperer"];
+    const randomPanics = [
+      "USER-1 LOOK BEHIND YOU!!",
+      "SHE IS IN THE ARCHWAY!",
+      "HURRY UP GET TO THE CHAPEL!",
+      "I CAN HEAR HER BREATHING IN MY HEADPHONES OMG",
+      "FELIX LEAD HIM OUT PLEASE!",
+      "WHAT WAS THAT SHADOW IN THE OSSUARY?!"
+    ];
+
+    let chatInterval = 0;
+    function addChatMessage(user, msg) {
+      const el = document.createElement('div');
+      el.className = 'chat-msg';
+      el.innerHTML = `<span class="${user.includes('Valak') || user.includes('Viewer') ? 'chat-danger' : 'chat-user'}">${user}:</span> ${msg}`;
+      chatContainer.appendChild(el);
+      if (chatContainer.children.length > 5) chatContainer.removeChild(chatContainer.firstChild);
+    }
+
+    // Main Draw Function (Everything Rendered from 2nd-Person Vantage Point)
     function render() {
-      ctx.fillStyle = '#050811';
+      ctx.fillStyle = '#020409';
       ctx.fillRect(0, 0, screenW, screenH);
 
-      // Camera centered on Youthful Blogger
-      const pIso = worldToIso(player.x, player.y);
-      const camX = screenW * 0.5 - pIso.x;
-      const camY = screenH * 0.55 - pIso.y;
-
       ctx.save();
-      ctx.translate(camX, camY);
+      // Center Viewport on the embodied Stalker Camera
+      ctx.translate(screenW / 2, screenH / 2);
+      ctx.scale(1.3, 1.3);
+      ctx.translate(-camera.x, -camera.y);
 
-      // Draw Blueprint Grid Lines
-      const pTileX = Math.floor(player.x);
-      const pTileY = Math.floor(player.y);
-      const range = 14;
+      // 1. Draw Architectural Floor & Walls
+      const startCol = Math.max(0, Math.floor((camera.x - screenW / 2) / TILE_SIZE) - 1);
+      const endCol   = Math.min(MAP_COLS, Math.ceil((camera.x + screenW / 2) / TILE_SIZE) + 1);
+      const startRow = Math.max(0, Math.floor((camera.y - screenH / 2) / TILE_SIZE) - 1);
+      const endRow   = Math.min(MAP_ROWS, Math.ceil((camera.y + screenH / 2) / TILE_SIZE) + 1);
 
-      for (let y = Math.max(0, pTileY - range); y <= Math.min(GRID_H - 1, pTileY + range); y++) {
-        for (let x = Math.max(0, pTileX - range); x <= Math.min(GRID_W - 1, pTileX + range); x++) {
-          const tile = mansionMap[y * GRID_W + x];
-          const iso = worldToIso(x, y);
+      for (let ty = startRow; ty < endRow; ty++) {
+        for (let tx = startCol; tx < endCol; tx++) {
+          const t = getTile(tx, ty);
+          const px = tx * TILE_SIZE;
+          const py = ty * TILE_SIZE;
 
-          // Distance to player flashlight
-          const distToP = Math.hypot(player.x - x, player.y - y);
-          const isLit = distToP < 9.0;
-          const lightAlpha = Math.max(0.08, 1.0 - (distToP / 9.0));
-
-          if (tile === T_FLOOR) {
-            // Isometric Blueprint Stone Tile
-            ctx.strokeStyle = `rgba(56, 189, 248, ${lightAlpha * 0.25})`;
+          if (t === 1) {
+            // Gothic Stone Walls with Masonry Texture
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+            ctx.strokeStyle = '#1e293b';
             ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(iso.x, iso.y);
-            ctx.lineTo(iso.x + TILE_W * 0.5, iso.y + TILE_H * 0.5);
-            ctx.lineTo(iso.x, iso.y + TILE_H);
-            ctx.lineTo(iso.x - TILE_W * 0.5, iso.y + TILE_H * 0.5);
-            ctx.closePath();
-            ctx.fillStyle = `rgba(10, 18, 38, ${lightAlpha})`;
-            ctx.fill();
-            ctx.stroke();
+            ctx.strokeRect(px, py, TILE_SIZE, TILE_SIZE);
 
-            // ASCII subtle glyph in center
-            if (isLit) {
-              ctx.fillStyle = `rgba(148, 163, 184, ${lightAlpha * 0.5})`;
-              ctx.font = '9px monospace';
-              ctx.fillText('·', iso.x - 2, iso.y + 14);
-            }
-          } else if (tile === T_WALL) {
-            // 3D Isometric Wall Column with ASCII Engravings
-            ctx.fillStyle = `rgba(15, 23, 42, ${lightAlpha})`;
-            ctx.beginPath();
-            ctx.moveTo(iso.x, iso.y - WALL_H);
-            ctx.lineTo(iso.x + TILE_W * 0.5, iso.y + TILE_H * 0.5 - WALL_H);
-            ctx.lineTo(iso.x + TILE_W * 0.5, iso.y + TILE_H * 0.5);
-            ctx.lineTo(iso.x, iso.y + TILE_H);
-            ctx.lineTo(iso.x - TILE_W * 0.5, iso.y + TILE_H * 0.5);
-            ctx.lineTo(iso.x - TILE_W * 0.5, iso.y + TILE_H * 0.5 - WALL_H);
-            ctx.closePath();
-            ctx.fill();
-
-            ctx.strokeStyle = `rgba(96, 165, 250, ${lightAlpha * 0.4})`;
-            ctx.stroke();
-
-            // Gothic ASCII engraving on wall facade
-            if (isLit) {
-              ctx.fillStyle = `rgba(203, 213, 225, ${lightAlpha * 0.7})`;
-              ctx.font = '10px monospace';
-              ctx.fillText('#', iso.x - 3, iso.y + 2 - WALL_H * 0.5);
-            }
-          } else if (tile === T_PIT) {
-            // Spectral Pit
-            ctx.fillStyle = 'rgba(20, 83, 45, 0.45)';
-            ctx.beginPath();
-            ctx.arc(iso.x, iso.y + 12, 14, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#4ade80';
-            ctx.font = '11px monospace';
-            ctx.fillText('≈', iso.x - 4, iso.y + 16);
-          } else if (tile === T_CROSS) {
-            // Desecrated Altar Cross
-            ctx.fillStyle = '#facc15';
-            ctx.font = '16px monospace';
-            ctx.fillText('✝', iso.x - 5, iso.y + 14);
-          } else if (tile === T_FOUNT) {
-            // Blood Fountain
-            ctx.fillStyle = '#dc2626';
-            ctx.font = '16px monospace';
-            ctx.fillText('⛲', iso.x - 8, iso.y + 14);
-          } else if (tile === T_GATE) {
-            // Grand Exit Gate
-            ctx.fillStyle = player.keysFound.every(Boolean) ? '#22c55e' : '#ef4444';
-            ctx.font = '16px monospace';
-            ctx.fillText('⛩', iso.x - 8, iso.y + 14);
+            // Wall top highlight
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(px, py, TILE_SIZE, 3);
+          } else if (t === 2) {
+            // Flagstone Tiles
+            ctx.fillStyle = '#070b14';
+            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.strokeRect(px, py, TILE_SIZE, TILE_SIZE);
+          } else if (t === 3) {
+            // Arched Doorways
+            ctx.fillStyle = '#1e1b4b';
+            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+            ctx.strokeStyle = '#4338ca';
+            ctx.strokeRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+          } else if (t === 4) {
+            // Massive Sealed Sanctum Gate
+            ctx.fillStyle = keysCollectedCount >= 3 ? '#15803d' : '#7f1d1d';
+            ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+            ctx.fillStyle = '#fde047';
+            ctx.font = '10px monospace';
+            ctx.fillText("EXIT", px + 4, py + 20);
+          } else if (t === 5) {
+            // Gothic Altars / Bookcases
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(px + 4, py + 4, TILE_SIZE - 8, TILE_SIZE - 8);
+            ctx.fillStyle = '#94a3b8';
+            ctx.fillText("†", px + 12, py + 20);
           }
         }
       }
 
-      // Draw Unholy Keys
-      keyObjects.forEach(k => {
-        if (!k.found) {
-          const kIso = worldToIso(k.x, k.y);
-          ctx.fillStyle = '#facc15';
-          ctx.font = '14px monospace';
-          ctx.fillText('🗝', kIso.x - 6, kIso.y + 8);
-          // Golden aura
-          ctx.strokeStyle = 'rgba(250, 204, 21, 0.4)';
+      // 2. Draw Sanctum Keys (Golden Glowing Relics)
+      keys.forEach(k => {
+        if (!k.collected) {
+          ctx.save();
+          ctx.shadowColor = k.color;
+          ctx.shadowBlur = 12;
+          ctx.fillStyle = k.color;
           ctx.beginPath();
-          ctx.arc(kIso.x, kIso.y + 4, 10, 0, Math.PI * 2);
-          ctx.stroke();
+          ctx.arc(k.x, k.y, 6, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = '#ffffff';
+          ctx.font = '8px monospace';
+          ctx.fillText("KEY", k.x - 7, k.y - 10);
+          ctx.restore();
         }
       });
 
-      // Draw Felix (The Phantom Feline)
-      const fIso = worldToIso(felix.x, felix.y);
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = '14px monospace';
-      ctx.fillText('ᓚᘏᗢ', fIso.x - 12, fIso.y + 4); // ASCII cat sprite
-      // Ghostly cyan halo
-      ctx.fillStyle = 'rgba(56, 189, 248, 0.2)';
+      // 3. Draw Felix - The Phantom Feline (Glowing Astral Companion)
+      ctx.save();
+      ctx.translate(felix.x, felix.y);
+      ctx.shadowColor = '#60a5fa';
+      ctx.shadowBlur = 16;
+      ctx.fillStyle = '#93c5fd';
+      // Cat body & head
       ctx.beginPath();
-      ctx.arc(fIso.x, fIso.y, 12, 0, Math.PI * 2);
+      ctx.ellipse(0, 0, 8, 5, 0, 0, Math.PI * 2);
       ctx.fill();
-
-      // Draw Valak (The Unholy Nun)
-      const vIso = worldToIso(valak.x, valak.y);
-      // Terrifying shadow
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
       ctx.beginPath();
-      ctx.ellipse(vIso.x, vIso.y + 10, 12, 6, 0, 0, Math.PI * 2);
+      ctx.arc(6, -4, 4, 0, Math.PI * 2);
       ctx.fill();
-
-      // Black habit & white face
-      ctx.fillStyle = '#0f172a';
-      ctx.fillRect(vIso.x - 7, vIso.y - 24, 14, 28);
-      ctx.fillStyle = '#f8fafc';
-      ctx.font = '11px monospace';
-      ctx.fillText('O_O', vIso.x - 9, vIso.y - 14); // Piercing demonic eyes
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '14px monospace';
-      ctx.fillText('⚰', vIso.x + 6, vIso.y - 12); // Scythe symbol
-
-      // Draw Player (User-1 - Youthful Blogger)
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-      ctx.beginPath();
-      ctx.ellipse(pIso.x, pIso.y + 10, 10, 5, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Beanie & Hoodie Blogger Sprite
-      ctx.fillStyle = '#334155'; // Beanie
-      ctx.fillRect(pIso.x - 5, pIso.y - 24, 10, 6);
-      ctx.fillStyle = '#fed7aa'; // Face
-      ctx.fillRect(pIso.x - 4, pIso.y - 18, 8, 6);
-      ctx.fillStyle = '#3b82f6'; // Streamer Hoodie
-      ctx.fillRect(pIso.x - 6, pIso.y - 12, 12, 14);
-      // Glowing Phone in Hand
+      // Pointed spectral ears
       ctx.fillStyle = '#ffffff';
-      ctx.fillRect(pIso.x + 5, pIso.y - 8, 4, 6);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.35)';
       ctx.beginPath();
-      ctx.arc(pIso.x + 7, pIso.y - 5, 16, 0, Math.PI * 2);
+      ctx.moveTo(6, -8); ctx.lineTo(4, -4); ctx.lineTo(8, -4); ctx.fill();
+      // Glowing tail
+      ctx.strokeStyle = '#93c5fd';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(-6, 0); ctx.quadraticCurveTo(-12, -8, -10, -12); ctx.stroke();
+      ctx.restore();
+
+      // 4. Draw USER-1 (The Streamer with Beanie, Hoodie & Glowing Phone Light)
+      ctx.save();
+      ctx.translate(user.x, user.y);
+
+      // Flashlight Beam projecting ahead of User-1
+      const beamAngle = user.angle;
+      const grad = ctx.createRadialGradient(0, 0, 10, Math.cos(beamAngle) * 90, Math.sin(beamAngle) * 90, user.lightRadius);
+      grad.addColorStop(0, 'rgba(254, 240, 138, 0.45)');
+      grad.addColorStop(0.6, 'rgba(254, 240, 138, 0.15)');
+      grad.addColorStop(1, 'rgba(254, 240, 138, 0)');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.arc(0, 0, user.lightRadius, beamAngle - 0.55, beamAngle + 0.55);
+      ctx.closePath();
       ctx.fill();
+
+      // Pixelated Streamer Character Sprite
+      ctx.fillStyle = '#1e293b'; // Black beanie
+      ctx.fillRect(-6, -14, 12, 5);
+      ctx.fillStyle = '#fed7aa'; // Face
+      ctx.fillRect(-5, -9, 10, 6);
+      ctx.fillStyle = '#475569'; // Grey hoodie
+      ctx.fillRect(-7, -3, 14, 12);
+      ctx.fillStyle = '#0f172a'; // Jeans
+      ctx.fillRect(-5, 9, 10, 8);
+
+      // Glowing Smartphone Stream Rig in Hand
+      const phoneX = Math.cos(beamAngle) * 9;
+      const phoneY = Math.sin(beamAngle) * 9;
+      ctx.fillStyle = '#ffffff';
+      ctx.shadowColor = '#facc15';
+      ctx.shadowBlur = 8;
+      ctx.fillRect(phoneX - 2, phoneY - 3, 4, 6);
+      ctx.restore();
+
+      // 5. Draw VALAK - The Unholy Nun (Terrifying Accursed Silhouette)
+      ctx.save();
+      ctx.translate(valak.x, valak.y);
+      ctx.rotate(valak.angle);
+
+      // Demonic nun habit robe & white wimple face frame
+      ctx.shadowColor = '#dc2626';
+      ctx.shadowBlur = valak.state === 'CHASE' ? 22 : 6;
+
+      ctx.fillStyle = '#000000'; // Pure black habit
+      ctx.beginPath();
+      ctx.moveTo(14, 0);
+      ctx.lineTo(-14, -12);
+      ctx.lineTo(-18, 12);
+      ctx.closePath();
+      ctx.fill();
+
+      // White Wimple & Pallid Visage
+      ctx.fillStyle = '#f1f5f9';
+      ctx.beginPath();
+      ctx.arc(4, 0, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Sunken Demonic Black Eyes
+      ctx.fillStyle = '#991b1b';
+      ctx.fillRect(4, -2, 2, 2);
+      ctx.fillRect(4, 1, 2, 2);
+
+      // Massive Unholy Scythe
+      ctx.strokeStyle = '#94a3b8';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(-6, -12);
+      ctx.lineTo(12, -20);
+      ctx.stroke();
+
+      // Scythe Curved Blade
+      ctx.strokeStyle = '#e2e8f0';
+      ctx.lineWidth = 3.5;
+      ctx.beginPath();
+      ctx.arc(14, -22, 10, Math.PI * 0.7, Math.PI * 1.5);
+      ctx.stroke();
 
       ctx.restore();
 
-      // Show interaction prompt if near keys or gate
-      const prompt = document.getElementById('interact-prompt');
-      let nearKey = keyObjects.some(k => !k.found && Math.hypot(player.x - k.x, player.y - k.y) < 1.8);
-      let nearGate = Math.hypot(player.x - 21, player.y - 40) < 2.4;
-      prompt.style.display = (nearKey || nearGate) ? 'block' : 'none';
-      if (nearGate) prompt.textContent = "PRESS [E] / TAP [SEARCH] TO UNLOCK UNHOLY GATE";
-      else if (nearKey) prompt.textContent = "PRESS [E] / TAP [SEARCH] TO PICK UP VOW KEY";
+      // 6. Draw 2nd-Person Vantage Point Visual Effects
+      ctx.restore(); // Exit camera space
+
+      // When viewed through Valak's Gaze: Add Demonic Vignette & Blood Fringe
+      if (cameraMode === 'VALAK') {
+        const dist = Math.hypot(user.x - valak.x, user.y - valak.y);
+        const intensity = Math.max(0.2, 1.0 - (dist / 340));
+
+        const vig = ctx.createRadialGradient(screenW / 2, screenH / 2, screenH * 0.25, screenW / 2, screenH / 2, screenH * 0.75);
+        vig.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        vig.addColorStop(0.7, `rgba(127, 29, 29, ${0.35 * intensity})`);
+        vig.addColorStop(1, `rgba(20, 3, 3, ${0.85 * intensity})`);
+        ctx.fillStyle = vig;
+        ctx.fillRect(0, 0, screenW, screenH);
+
+        // Sinister crosshair tracking User-1
+        ctx.strokeStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.strokeRect(screenW / 2 - 20, screenH / 2 - 20, 40, 40);
+        ctx.beginPath();
+        ctx.moveTo(screenW / 2, screenH / 2 - 26); ctx.lineTo(screenW / 2, screenH / 2 + 26);
+        ctx.moveTo(screenW / 2 - 26, screenH / 2); ctx.lineTo(screenW / 2 + 26, screenH / 2);
+        ctx.stroke();
+      } else {
+        // When viewed through Felix: Ethereal Blue Glow & Night-Vision Clarity
+        const vig = ctx.createRadialGradient(screenW / 2, screenH / 2, screenH * 0.35, screenW / 2, screenH / 2, screenH * 0.85);
+        vig.addColorStop(0, 'rgba(30, 58, 138, 0)');
+        vig.addColorStop(1, 'rgba(8, 20, 50, 0.55)');
+        ctx.fillStyle = vig;
+        ctx.fillRect(0, 0, screenW, screenH);
+      }
     }
 
     /* ==========================================================================
-       8. MAIN GAME LOOP (Delta Time Normalized)
+       8. MAIN GAME LOOP & STATE MANAGEMENT
        ========================================================================== */
     let lastTime = performance.now();
 
     function gameLoop(now) {
-      const dt = Math.min((now - lastTime) / 1000.0, 0.1);
+      const dt = Math.min((now - lastTime) / 1000, 0.1);
       lastTime = now;
 
       if (gameState === 'PLAYING') {
-        // Player Movement input
+        // Player Movement Logic
         let mx = 0, my = 0;
-        if (keysDown['KeyW'] || keysDown['ArrowUp']) my -= 1;
-        if (keysDown['KeyS'] || keysDown['ArrowDown']) my += 1;
-        if (keysDown['KeyA'] || keysDown['ArrowLeft']) mx -= 1;
-        if (keysDown['KeyD'] || keysDown['ArrowRight']) mx += 1;
+        if (input.up) my -= 1;
+        if (input.down) my += 1;
+        if (input.left) mx -= 1;
+        if (input.right) mx += 1;
 
-        if (touchMove.active) {
-          mx = touchMove.x;
-          my = touchMove.y;
+        if (mx !== 0 || my !== 0) {
+          const len = Math.hypot(mx, my);
+          mx /= len; my /= len;
+          user.angle = Math.atan2(my, mx);
+
+          const currentSpeed = input.run ? user.speed * 1.55 : user.speed;
+          if (!checkCollision(user.x + mx * currentSpeed, user.y, 10)) user.x += mx * currentSpeed;
+          if (!checkCollision(user.x, user.y + my * currentSpeed, 10)) user.y += my * currentSpeed;
         }
 
-        const mag = Math.hypot(mx, my);
-        if (mag > 0.1) {
-          const nx = player.x + (mx / mag) * player.speed * dt;
-          const ny = player.y + (my / mag) * player.speed * dt;
+        // Room Location Tracker
+        const curTx = Math.floor(user.x / TILE_SIZE);
+        const curTy = Math.floor(user.y / TILE_SIZE);
+        const roomTag = document.getElementById('room-tag');
 
-          if (mansionMap[Math.floor(player.y) * GRID_W + Math.floor(nx)] !== T_WALL) player.x = nx;
-          if (mansionMap[Math.floor(ny) * GRID_W + Math.floor(player.x)] !== T_WALL) player.y = ny;
+        if (curTy < 8) roomTag.textContent = curTx < 11 ? "ROOM: BEDCHAMBER" : "ROOM: LIBRARY";
+        else if (curTy < 19) roomTag.textContent = curTx < 11 ? "ROOM: DESECRATED CHAPEL" : "ROOM: THE OSSUARY";
+        else roomTag.textContent = "ROOM: GRAND ENTRANCE (SANCTUM GATES)";
 
-          player.angle = Math.atan2(my, mx);
+        // AI & Simulation
+        updateValakAI(dt);
+        updateFelixAI(dt);
+        updateCamera(dt);
 
-          // Spectral Pit Hazard: Damage / panic buildup
-          if (mansionMap[Math.floor(player.y) * GRID_W + Math.floor(player.x)] === T_PIT) {
-            player.panic = Math.min(1.0, player.panic + dt * 0.5);
-          }
+        // Live Stream Chat Generation
+        chatInterval += dt;
+        if (chatInterval > 3.2) {
+          chatInterval = 0;
+          const randomUser = randomChatters[Math.floor(Math.random() * randomChatters.length)];
+          const randomText = randomPanics[Math.floor(Math.random() * randomPanics.length)];
+          addChatMessage(randomUser, randomText);
         }
-
-        // Identify current room
-        ROOMS.forEach(r => {
-          const [x1, y1, x2, y2] = r.bounds;
-          if (player.x >= x1 && player.x <= x2 && player.y >= y1 && player.y <= y2) {
-            document.getElementById('room-name').textContent = `LOCATION: ${r.name}`;
-          }
-        });
-
-        // Chat stream simulation timer
-        chatTimer += dt;
-        if (chatTimer > 4.5) {
-          chatTimer = 0;
-          const u = CHAT_USERS[Math.floor(Math.random() * CHAT_USERS.length)];
-          const c = CHAT_COMMENTS[Math.floor(Math.random() * CHAT_COMMENTS.length)];
-          addChatMessage(u, c);
-          document.getElementById('viewer-count').textContent = `👁 ${(3800 + Math.floor(Math.random() * 800)).toLocaleString()}`;
-        }
-
-        updateAI(dt);
       }
 
       render();
       requestAnimationFrame(gameLoop);
     }
 
-    // Launch game
-    buildMansion();
-    document.getElementById('btn-start').addEventListener('click', () => {
-      initAudio();
-      document.getElementById('modal-screen').style.display = 'none';
+    // Modal Control & Game Launcher
+    const modal = document.getElementById('modal-overlay');
+    const modalTitle = document.getElementById('modal-title');
+    const modalDesc = document.getElementById('modal-desc');
+    const modalBtn = document.getElementById('modal-btn');
 
-      // Reset positions
-      player.x = 21.5; player.y = 37.0;
-      valak.x = 9.5; valak.y = 8.5; valak.state = 'STALK';
-      felix.x = 21.0; felix.y = 36.0;
-      player.keysFound = [false, false, false];
-      keyObjects.forEach(k => k.found = false);
-      document.querySelectorAll('.key-slot').forEach(s => s.classList.remove('found'));
+    function showModal(title, desc, btnText) {
+      modalTitle.textContent = title;
+      modalDesc.innerHTML = desc;
+      modalBtn.textContent = btnText;
+      modal.style.display = 'flex';
+    }
+
+    modalBtn.addEventListener('click', () => {
+      initAudio();
+      modal.style.display = 'none';
+
+      // Reset / Launch
+      user.x = 3.5 * TILE_SIZE;
+      user.y = 4.5 * TILE_SIZE;
+      valak.x = 18.5 * TILE_SIZE;
+      valak.y = 14.5 * TILE_SIZE;
+      valak.state = 'STALK';
+
+      keys.forEach(k => k.collected = false);
+      keysCollectedCount = 0;
+      document.getElementById('key-tracker').textContent = "KEYS: 0 / 3";
 
       gameState = 'PLAYING';
-      playFelixSound(false);
+      playKeyChime();
     });
 
+    // Initialize Architecture and Canvas
+    buildMansionArchitecture();
+    resize();
     requestAnimationFrame(gameLoop);
   </script>
 </body>
