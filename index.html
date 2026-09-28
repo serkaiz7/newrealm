@@ -2,13 +2,11 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <!-- Viewport Guard: Prevents pinch-zoom, double-tap zoom, and mobile scaling artifacts -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>ASCII Voxel Heightmap</title>
+  <title>ASCII Voxel Craft // Sandbox World</title>
   <style>
-    /* Reset & Touch Guard: Eliminates gestures, elastic bouncing, and pull-to-refresh */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -22,10 +20,10 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #060814;
+      background-color: #050711;
       touch-action: none;
       position: fixed;
-      font-family: monospace;
+      font-family: 'Courier New', Courier, monospace;
     }
 
     #game-canvas {
@@ -35,7 +33,7 @@
       touch-action: none;
     }
 
-    /* Minimalist HUD overlay */
+    /* Minimalist Tactical HUD */
     #hud {
       position: absolute;
       top: 10px;
@@ -45,14 +43,135 @@
       justify-content: space-between;
       color: #9cb3d9;
       font-size: 11px;
+      font-weight: bold;
       pointer-events: none;
-      text-shadow: 1px 1px 2px #000;
+      text-shadow: 1px 1px 3px #000;
       z-index: 10;
+    }
+
+    #target-info {
+      position: absolute;
+      top: 32px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #e2e8f0;
+      background: rgba(15, 23, 42, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 3px 10px;
+      border-radius: 4px;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+      text-align: center;
+      z-index: 10;
+    }
+
+    /* Reticle / Crosshair */
+    #reticle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(255, 255, 255, 0.7);
+      font-size: 16px;
+      pointer-events: none;
+      z-index: 9;
+      line-height: 1;
+    }
+
+    /* Mobile Interaction Buttons */
+    .action-btn {
+      position: absolute;
+      width: 68px;
+      height: 68px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: bold;
+      color: #fff;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(4px);
+      z-index: 20;
+      touch-action: manipulation;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+    .action-btn:active {
+      transform: scale(0.92);
+      filter: brightness(1.2);
+    }
+    #btn-mine {
+      bottom: 96px;
+      right: 20px;
+      background: rgba(220, 38, 38, 0.55);
+      border-color: #ef4444;
+    }
+    #btn-build {
+      bottom: 96px;
+      right: 98px;
+      background: rgba(16, 185, 129, 0.55);
+      border-color: #10b981;
+    }
+    #btn-jump {
+      bottom: 174px;
+      right: 58px;
+      width: 52px;
+      height: 52px;
+      background: rgba(59, 130, 246, 0.55);
+      border-color: #3b82f6;
+    }
+    .btn-icon {
+      font-size: 16px;
+      margin-bottom: 2px;
+    }
+
+    /* Minecraft-Style Block Hotbar */
+    #hotbar {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 5px;
+      border-radius: 8px;
+      z-index: 20;
+    }
+
+    .hotbar-slot {
+      width: 44px;
+      height: 48px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid transparent;
+      border-radius: 4px;
+      color: #cbd5e1;
+      font-size: 9px;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .hotbar-slot.active {
+      border-color: #facc15;
+      background: rgba(250, 204, 21, 0.18);
+      color: #fff;
+    }
+    .hotbar-char {
+      font-size: 14px;
+      margin-bottom: 2px;
+      font-weight: bold;
     }
 
     #controls-hint {
       position: absolute;
-      bottom: 12px;
+      bottom: 74px;
       left: 50%;
       transform: translateX(-50%);
       color: rgba(255, 255, 255, 0.45);
@@ -60,61 +179,114 @@
       text-align: center;
       pointer-events: none;
       white-space: nowrap;
-      transition: opacity 1.5s ease-out;
+      transition: opacity 2s ease-out;
     }
   </style>
 </head>
 <body>
   <div id="hud">
-    <div id="hud-left">VOXEL-ASCII // FPS: --</div>
-    <div id="hud-center">HEADING: [ N ]</div>
+    <div id="hud-left">VOXEL-CRAFT // FPS: --</div>
+    <div id="hud-center">BIOME: HIGHLAND PLAINS</div>
     <div id="hud-right">POS: (0, 0) | ALT: 0m</div>
   </div>
-  <div id="controls-hint">TOUCH: Left = Move, Right = Look | DESKTOP: WASD / Drag to Look</div>
+
+  <div id="target-info">TARGET: NONE</div>
+  <div id="reticle">+</div>
+
+  <!-- Mobile Controls -->
+  <div id="btn-jump" class="action-btn"><span class="btn-icon">▲</span>JUMP</div>
+  <div id="btn-build" class="action-btn"><span class="btn-icon">🧱</span>BUILD</div>
+  <div id="btn-mine" class="action-btn"><span class="btn-icon">⛏</span>MINE</div>
+
+  <!-- Hotbar -->
+  <div id="hotbar">
+    <div class="hotbar-slot active" data-mat="3"><span class="hotbar-char" style="color:#94a3b8">#</span>STONE<span style="font-size:7px">[1]</span></div>
+    <div class="hotbar-slot" data-mat="4"><span class="hotbar-char" style="color:#b45309">=</span>WOOD<span style="font-size:7px">[2]</span></div>
+    <div class="hotbar-slot" data-mat="6"><span class="hotbar-char" style="color:#ef4444">■</span>BRICK<span style="font-size:7px">[3]</span></div>
+    <div class="hotbar-slot" data-mat="5"><span class="hotbar-char" style="color:#22c55e">*</span>LEAF<span style="font-size:7px">[4]</span></div>
+    <div class="hotbar-slot" data-mat="2"><span class="hotbar-char" style="color:#84cc16">w</span>GRASS<span style="font-size:7px">[5]</span></div>
+    <div class="hotbar-slot" data-mat="7"><span class="hotbar-char" style="color:#fde047">☼</span>LIGHT<span style="font-size:7px">[6]</span></div>
+  </div>
+
+  <div id="controls-hint">DESKTOP: WASD to Move, Left-Click Mine, Right-Click / Space Build, 1-6 Hotbar</div>
   <canvas id="game-canvas"></canvas>
 
   <script>
     /* ==========================================================================
-       1. ENGINE ARCHITECTURE & CONFIGURATION
+       1. CONSTANTS & VOXEL MATERIAL REGISTRY
        ========================================================================== */
-    const MAP_SIZE = 512;          // 512x512 heightmap grid
-    const MAP_MASK = MAP_SIZE - 1; // Bitwise mask for seamless map wrapping
-    const WATER_LEVEL = 28.0;      // Water surface baseline altitude
-    const FOV = 1.15;              // Field of view (~66 degrees)
+    const MAP_SIZE = 512;
+    const MAP_MASK = MAP_SIZE - 1;
+    const WATER_LEVEL = 28.0;
+    const FOV = 1.15;
+    const MAX_RAY_DIST = 260.0;
+    const REACH_DISTANCE = 16.0;
 
-    // Lighting vector: Directional sun pointing down from South-West
-    const SUN_DIR = normalizeVector({ x: -0.55, y: -0.65, z: 0.52 });
+    // Voxel Material IDs
+    const MAT_WATER = 0;
+    const MAT_DIRT  = 1;
+    const MAT_GRASS = 2;
+    const MAT_STONE = 3;
+    const MAT_WOOD  = 4;
+    const MAT_LEAF  = 5;
+    const MAT_BRICK = 6;
+    const MAT_LIGHT = 7;
+    const MAT_SAND  = 8;
+    const MAT_SNOW  = 9;
 
-    // Canvas & Screen Grid state
+    // Material definitions: names, visual glyph palettes, and base RGB tones
+    const MATERIALS = {
+      [MAT_WATER]: { name: "Water",       base: [28, 85, 175],  glyphs: ['~', '≈', '-'] },
+      [MAT_DIRT]:  { name: "Dirt",        base: [130, 88, 52],  glyphs: ['.', ':', '%'] },
+      [MAT_GRASS]: { name: "Grass Block", base: [48, 142, 54],  glyphs: ['w', 'v', ',', '.'] },
+      [MAT_STONE]: { name: "Cobblestone", base: [120, 124, 134],glyphs: ['#', '%', '&'] },
+      [MAT_WOOD]:  { name: "Wood Planks", base: [160, 108, 62], glyphs: ['=', '|', 'H'] },
+      [MAT_LEAF]:  { name: "Foliage",     base: [34, 148, 48],  glyphs: ['*', '@', '%'] },
+      [MAT_BRICK]: { name: "Stone Brick", base: [180, 72, 58],  glyphs: ['■', '[', ']'] },
+      [MAT_LIGHT]: { name: "Glowstone",   base: [255, 215, 60], glyphs: ['☼', '*', '+'] },
+      [MAT_SAND]:  { name: "Sand",        base: [195, 175, 110],glyphs: [':', '.', '°'] },
+      [MAT_SNOW]:  { name: "Snow Cap",    base: [230, 238, 250],glyphs: ['█', '▓', '▒'] },
+    };
+
+    // Sun directional vector
+    const SUN_DIR = normalizeVector({ x: -0.58, y: -0.62, z: 0.52 });
+
+    /* ==========================================================================
+       2. CANVAS, STATE & BUFFERS
+       ========================================================================== */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d', { alpha: false });
     let screenW = 0, screenH = 0;
     let cols = 0, rows = 0;
     let cellW = 0, cellH = 0;
 
-    // Raycast text buffers (flattened 1D arrays: index = r * cols + c)
     let charBuffer = [];
     let colorBuffer = [];
 
-    // Player state
+    // Player state with physics
     const player = {
       x: 256.0,
       y: 256.0,
       z: 60.0,
       targetZ: 60.0,
-      yaw: 0.0,       // Horizontal rotation in radians
-      pitch: 0.0,     // Horizon pitch offset (-0.45 to 0.45)
-      speed: 36.0,    // Movement units per second
-      eyeHeight: 5.5
+      vz: 0.0,
+      yaw: 0.0,
+      pitch: 0.0,
+      speed: 38.0,
+      eyeHeight: 5.5,
+      isGrounded: true
     };
 
-    /* ==========================================================================
-       2. PROCEDURAL TERRAIN GENERATION (Multi-Octave Value Noise)
-       ========================================================================== */
-    const heightMap = new Float32Array(MAP_SIZE * MAP_SIZE);
+    let selectedMat = MAT_STONE;
+    let currentTarget = null; // Coordinates of block targeted by crosshair
 
-    // Deterministic pseudo-random noise generator
-    function createNoise2D(seed = 42) {
+    /* ==========================================================================
+       3. PROCEDURAL TERRAIN, TREES & RUINS GENERATION
+       ========================================================================== */
+    const heightMap   = new Float32Array(MAP_SIZE * MAP_SIZE);
+    const materialMap = new Uint8Array(MAP_SIZE * MAP_SIZE);
+
+    function createNoise2D(seed = 101) {
       const p = new Uint8Array(512);
       for (let i = 0; i < 256; i++) p[i] = i;
       let s = seed;
@@ -130,20 +302,16 @@
         const yi = Math.floor(y) & 255;
         const xf = x - Math.floor(x);
         const yf = y - Math.floor(y);
-        // Quintic S-curve smoothstep
         const u = xf * xf * xf * (xf * (xf * 6.0 - 15.0) + 10.0);
         const v = yf * yf * yf * (yf * (yf * 6.0 - 15.0) + 10.0);
 
-        const a1 = p[p[xi] + yi];
-        const a2 = p[p[xi] + yi + 1];
-        const b1 = p[p[xi + 1] + yi];
-        const b2 = p[p[xi + 1] + yi + 1];
-
-        // Pseudo-random gradient projection
         function grad(hash, gx, gy) {
           const h = hash & 3;
           return ((h & 1) ? -gx : gx) + ((h & 2) ? -gy : gy);
         }
+
+        const a1 = p[p[xi] + yi], a2 = p[p[xi] + yi + 1];
+        const b1 = p[p[xi + 1] + yi], b2 = p[p[xi + 1] + yi + 1];
 
         const x1 = grad(a1, xf, yf) * (1.0 - u) + grad(b1, xf - 1.0, yf) * u;
         const x2 = grad(a2, xf, yf - 1.0) * (1.0 - u) + grad(b2, xf - 1.0, yf - 1.0) * u;
@@ -151,32 +319,113 @@
       };
     }
 
-    function generateWorld() {
-      const noise = createNoise2D(777);
-      for (let y = 0; y < MAP_SIZE; y++) {
-        const rowOffset = y * MAP_SIZE;
-        for (let x = 0; x < MAP_SIZE; x++) {
-          // Multi-octave Fractal Brownian Motion (fBm)
-          let h = 0;
-          h += noise(x * 0.005, y * 0.005) * 85.0; // Continental landmasses
-          h += noise(x * 0.012, y * 0.012) * 40.0; // Rolling hills
-          h += noise(x * 0.030, y * 0.030) * 16.0; // Ridge crags
-          h += noise(x * 0.070, y * 0.070) * 5.0;  // Local rock bumps
-          h += 52.0; // Baseline shift
+    function generateDetailedWorld() {
+      const noise = createNoise2D(909);
 
-          // Mountain peak shaping: exponential steepening above tree-line
-          if (h > 65.0) {
-            h += Math.pow((h - 65.0) * 0.04, 2.3) * 35.0;
+      // Phase 1: Multi-octave base elevation & geological biome assignment
+      for (let y = 0; y < MAP_SIZE; y++) {
+        const row = y * MAP_SIZE;
+        for (let x = 0; x < MAP_SIZE; x++) {
+          let h = 0;
+          h += noise(x * 0.004, y * 0.004) * 88.0;
+          h += noise(x * 0.012, y * 0.012) * 36.0;
+          h += noise(x * 0.035, y * 0.035) * 14.0;
+          h += noise(x * 0.080, y * 0.080) * 4.0;
+          h += 50.0;
+
+          if (h > 72.0) {
+            h += Math.pow((h - 72.0) * 0.04, 2.2) * 38.0;
           }
-          heightMap[rowOffset + x] = Math.max(0, h);
+          const idx = row + x;
+          heightMap[idx] = Math.max(0, h);
+
+          // Assign surface material based on altitude and environment
+          if (h < WATER_LEVEL) {
+            materialMap[idx] = MAT_WATER;
+          } else if (h < WATER_LEVEL + 4.5) {
+            materialMap[idx] = MAT_SAND;
+          } else if (h < 76.0) {
+            materialMap[idx] = MAT_GRASS;
+          } else if (h < 118.0) {
+            materialMap[idx] = MAT_STONE;
+          } else {
+            materialMap[idx] = MAT_SNOW;
+          }
         }
       }
 
-      // Safe spawn search: locate scenic highland meadow
-      for (let y = 100; y < 400; y += 4) {
-        for (let x = 100; x < 400; x += 4) {
-          const h = sampleTerrain(x, y);
-          if (h > WATER_LEVEL + 10.0 && h < 75.0) {
+      // Phase 2: Procedural Tree Distribution (Forests & Groves)
+      for (let cy = 16; cy < MAP_SIZE - 16; cy += 12) {
+        for (let cx = 16; cx < MAP_SIZE - 16; cx += 12) {
+          const jx = (cx + (Math.sin(cy * 4.2) * 5.0 + 6.0)) | 0;
+          const jy = (cy + (Math.cos(cx * 3.7) * 5.0 + 6.0)) | 0;
+          const baseH = heightMap[jy * MAP_SIZE + jx];
+
+          // Plant trees only on fertile grass slopes
+          if (baseH > WATER_LEVEL + 5.0 && baseH < 74.0) {
+            const trunkHeight = 5.0 + (Math.sin(jx * 7.1) * 2.0);
+            // Erect wood trunk
+            heightMap[jy * MAP_SIZE + jx] += trunkHeight;
+            materialMap[jy * MAP_SIZE + jx] = MAT_WOOD;
+
+            // Canopy foliage cluster
+            for (let dy = -2; dy <= 2; dy++) {
+              for (let dx = -2; dx <= 2; dx++) {
+                if (dx === 0 && dy === 0) continue;
+                const dist = Math.hypot(dx, dy);
+                if (dist <= 2.2) {
+                  const tx = (jx + dx) & MAP_MASK;
+                  const ty = (jy + dy) & MAP_MASK;
+                  const tidx = ty * MAP_SIZE + tx;
+                  heightMap[tidx] += trunkHeight * (0.65 - dist * 0.15);
+                  materialMap[tidx] = MAT_LEAF;
+                }
+              }
+            }
+          }
+        }
+      }
+
+      // Phase 3: Ancient Stone Brick Ruins & High Dungeons
+      const ruins = [
+        { x: 190, y: 180, r: 8, wallH: 9 },
+        { x: 320, y: 220, r: 10, wallH: 12 },
+        { x: 260, y: 340, r: 7, wallH: 8 }
+      ];
+
+      ruins.forEach(ruin => {
+        const floorH = heightMap[ruin.y * MAP_SIZE + ruin.x];
+        for (let dy = -ruin.r; dy <= ruin.r; dy++) {
+          for (let dx = -ruin.r; dx <= ruin.r; dx++) {
+            const dist = Math.hypot(dx, dy);
+            const rx = (ruin.x + dx) & MAP_MASK;
+            const ry = (ruin.y + dy) & MAP_MASK;
+            const ridx = ry * MAP_SIZE + rx;
+
+            if (Math.abs(dist - ruin.r) < 1.4) {
+              // Outer fortress battlement wall with periodic crenellations
+              const crenel = ((dx + dy) & 1) === 0 ? 2.0 : 0.0;
+              heightMap[ridx] = floorH + ruin.wallH + crenel;
+              materialMap[ridx] = MAT_BRICK;
+            } else if (dist < ruin.r) {
+              // Level courtyard pavement
+              heightMap[ridx] = floorH + 0.5;
+              materialMap[ridx] = MAT_STONE;
+            }
+          }
+        }
+        // Center glowstone beacon
+        const cidx = ruin.y * MAP_SIZE + ruin.x;
+        heightMap[cidx] = floorH + ruin.wallH + 3.0;
+        materialMap[cidx] = MAT_LIGHT;
+      });
+
+      // Find a safe scenic spawn on open grassland
+      for (let y = 140; y < 380; y += 4) {
+        for (let x = 140; x < 380; x += 4) {
+          const h = heightMap[y * MAP_SIZE + x];
+          const mat = materialMap[y * MAP_SIZE + x];
+          if (mat === MAT_GRASS && h > WATER_LEVEL + 8.0) {
             player.x = x;
             player.y = y;
             player.z = h + player.eyeHeight;
@@ -199,187 +448,198 @@
     }
 
     /* ==========================================================================
-       3. LIGHTING & SURFACE NORMAL ENGINE
+       4. DYNAMIC LIGHTING & NORMAL CALCULATION
        ========================================================================== */
-    // Computes normal and directional lighting on-the-fly via finite differences
-    function computeLighting(mx, my, isWater) {
-      if (isWater) {
-        // Water has an upward-facing normal with subtle specular bounce
-        return 0.88;
-      }
-      const x = Math.floor(mx) & MAP_MASK;
-      const y = Math.floor(my) & MAP_MASK;
+    function computeLighting(mx, my, isWater, mat) {
+      if (isWater) return 0.88;
+      if (mat === MAT_LIGHT) return 1.5; // Emissive light source
+
+      const x = mx & MAP_MASK;
+      const y = my & MAP_MASK;
 
       const hL = heightMap[y * MAP_SIZE + ((x - 1) & MAP_MASK)];
       const hR = heightMap[y * MAP_SIZE + ((x + 1) & MAP_MASK)];
       const hU = heightMap[(((y - 1) & MAP_MASK) * MAP_SIZE) + x];
       const hD = heightMap[(((y + 1) & MAP_MASK) * MAP_SIZE) + x];
 
-      // Slope gradients
       const dx = (hR - hL) * 0.5;
       const dy = (hD - hU) * 0.5;
 
-      // Surface normal: N = (-dx, -dy, 1.0)
       const len = Math.hypot(dx, dy, 1.0);
       const nx = -dx / len;
       const ny = -dy / len;
       const nz = 1.0 / len;
 
-      // Dot product with sun direction
       const dot = nx * SUN_DIR.x + ny * SUN_DIR.y + nz * SUN_DIR.z;
-      // Ambient lighting baseline (0.22) + diffuse direct sun
-      return Math.max(0.18, Math.min(1.0, dot * 0.65 + 0.42));
+      return Math.max(0.18, Math.min(1.0, dot * 0.65 + 0.45));
     }
 
     /* ==========================================================================
-       4. MATERIAL & ASCII GLYPH SHADING PIPELINE
+       5. VOXEL RAYCASTING ENGINE & TARGETING
        ========================================================================== */
-    function getVoxelVisual(h, d, maxD, light, isWater, animTime) {
-      // Depth fog factor (exponential falloff)
+    function getVoxelVisual(h, d, maxD, light, mat, isWater, animTime, isTargeted) {
       const fog = Math.min(1.0, Math.pow(d / maxD, 1.6));
-      let char = '░';
-      let r = 0, g = 0, b = 0;
+      const def = MATERIALS[mat] || MATERIALS[MAT_STONE];
+      let char = def.glyphs[0];
+      let [r, g, b] = def.base;
 
       if (isWater) {
-        // Water: animated waves using Unicode ripples
-        const wave = Math.sin(animTime * 3.5 + d * 0.3);
+        const wave = Math.sin(animTime * 3.5 + d * 0.35);
         char = wave > 0.3 ? '~' : (wave > -0.3 ? '≈' : '-');
-        r = 24; g = 75; b = 160;
-      } else if (h < WATER_LEVEL + 5.0) {
-        // Sand / Shoreline
-        char = light > 0.5 ? ':' : '.';
-        r = 185; g = 165; b = 105;
-      } else if (h < 75.0) {
-        // Grass / Lowland Plains
-        const dense = light * (1.0 - fog * 0.5);
-        char = dense > 0.7 ? 'w' : (dense > 0.4 ? 'v' : (dense > 0.2 ? ',' : '.'));
-        r = 45; g = 135; b = 50;
-      } else if (h < 115.0) {
-        // Rocky Crags & Cliffs
-        char = light > 0.65 ? '#' : (light > 0.4 ? '%' : ':');
-        r = 110; g = 105; b = 100;
-      } else {
-        // Mountain Peaks / Snow Caps
-        char = light > 0.7 ? '█' : (light > 0.45 ? '▓' : '▒');
-        r = 220; g = 230; b = 245;
+      } else if (mat === MAT_GRASS) {
+        char = light > 0.6 ? 'w' : (light > 0.35 ? 'v' : '.');
+      } else if (mat === MAT_WOOD) {
+        char = (Math.floor(h) & 1) === 0 ? '=' : '|';
       }
 
-      // Apply directional lighting
+      // Apply light & distance fog
       r = Math.floor(r * light);
       g = Math.floor(g * light);
       b = Math.floor(b * light);
 
-      // Distance fog blending towards deep atmosphere color (#060814 -> [6, 8, 20])
-      r = Math.floor(r * (1.0 - fog) + 6.0 * fog);
-      g = Math.floor(g * (1.0 - fog) + 8.0 * fog);
-      b = Math.floor(b * (1.0 - fog) + 20.0 * fog);
+      r = Math.floor(r * (1.0 - fog) + 5.0 * fog);
+      g = Math.floor(g * (1.0 - fog) + 7.0 * fog);
+      b = Math.floor(b * (1.0 - fog) + 17.0 * fog);
 
-      // Distant geometry fades into sparser dithering glyphs
-      if (fog > 0.78) char = '░';
-      if (fog > 0.92) char = '.';
+      if (fog > 0.8) char = '░';
+      if (fog > 0.94) char = '.';
+
+      // Reticle targeting wireframe glow
+      if (isTargeted) {
+        char = '█';
+        r = Math.min(255, r + 90);
+        g = Math.min(255, g + 90);
+        b = Math.min(255, b + 40);
+      }
 
       return { char, color: `rgb(${r},${g},${b})` };
     }
 
-    /* ==========================================================================
-       5. VOXEL SPACE RAYCASTING ENGINE
-       ========================================================================== */
+    // 3D Raymarching from eye to determine block in center crosshair
+    function updateTargetRaycast() {
+      const cosY = Math.cos(player.yaw);
+      const sinY = Math.sin(player.yaw);
+      const pitchCos = Math.cos(player.pitch);
+      const dirX = cosY * pitchCos;
+      const dirY = sinY * pitchCos;
+      const dirZ = -Math.sin(player.pitch) * 1.4;
+
+      let d = 0.5;
+      currentTarget = null;
+
+      while (d < REACH_DISTANCE) {
+        const rx = player.x + dirX * d;
+        const ry = player.y + dirY * d;
+        const rz = player.z + dirZ * d;
+
+        const mx = Math.floor(rx) & MAP_MASK;
+        const my = Math.floor(ry) & MAP_MASK;
+        const gh = heightMap[my * MAP_SIZE + mx];
+
+        if (rz <= gh) {
+          currentTarget = {
+            x: mx,
+            y: my,
+            h: gh,
+            mat: materialMap[my * MAP_SIZE + mx],
+            dist: d
+          };
+          break;
+        }
+        d += 0.35;
+      }
+
+      // Update target UI banner
+      const infoEl = document.getElementById('target-info');
+      if (currentTarget) {
+        const matName = (MATERIALS[currentTarget.mat] || {}).name || "Block";
+        infoEl.textContent = `TARGET: [ ${matName.toUpperCase()} ] @ (${currentTarget.x}, ${currentTarget.y}) DIST: ${currentTarget.dist.toFixed(1)}m`;
+        infoEl.style.borderColor = "#facc15";
+      } else {
+        infoEl.textContent = `TARGET: NONE`;
+        infoEl.style.borderColor = "rgba(255, 255, 255, 0.15)";
+      }
+    }
+
     function renderRaycastScene(time) {
-      const maxDist = 240.0;
       const verticalScale = rows * 1.05;
       const horizonY = rows * (0.45 + player.pitch);
 
-      // Clear text grid with blank sky characters
       const totalCells = cols * rows;
       for (let i = 0; i < totalCells; i++) {
         charBuffer[i] = ' ';
-        colorBuffer[i] = '#060814';
+        colorBuffer[i] = '#050711';
       }
 
-      // Render column-by-column across screen width
       for (let c = 0; c < cols; c++) {
-        // Camera ray angle for column c
-        const screenU = (c / (cols - 1)) - 0.5; // [-0.5, 0.5]
+        const screenU = (c / (cols - 1)) - 0.5;
         const rayAngle = player.yaw + screenU * FOV;
         const cosA = Math.cos(rayAngle);
         const sinA = Math.sin(rayAngle);
-
-        // Fish-eye lens correction factor
         const fishEye = Math.cos(screenU * FOV);
 
-        // Height occlusion barrier: tracks highest projected pixel on screen
         let maxHeight = rows;
-
-        // Progressive distance ray-marching (near -> far)
-        // Step size grows with distance for optimal performance & level-of-detail
         let d = 1.2;
-        while (d < maxDist) {
-          const dStep = 0.5 + d * 0.017;
+
+        while (d < MAX_RAY_DIST) {
+          const dStep = 0.45 + d * 0.016;
           d += dStep;
 
           const mx = (player.x + cosA * d) & MAP_MASK;
           const my = (player.y + sinA * d) & MAP_MASK;
-          let h = heightMap[my * MAP_SIZE + mx];
+          const idx = my * MAP_SIZE + mx;
 
-          // Water surface clipping & ripple offset
+          let h = heightMap[idx];
+          const mat = materialMap[idx];
           let isWater = false;
-          if (h < WATER_LEVEL) {
+
+          if (mat === MAT_WATER || h < WATER_LEVEL) {
             h = WATER_LEVEL + Math.sin(mx * 0.2 + my * 0.15 + time * 3.0) * 0.35;
             isWater = true;
           }
 
-          // 3D Voxel Space projection equation:
-          // screenY = (CameraHeight - VoxelHeight) / CorrectedDistance * Scale + Horizon
           const correctedDist = d * fishEye;
           const projY = Math.floor((player.z - h) / correctedDist * verticalScale + horizonY);
 
-          // If current terrain height projects above the occluder, it is visible!
           if (projY < maxHeight) {
             const yStart = Math.max(0, projY);
             const yEnd = Math.min(rows, maxHeight);
 
             if (yStart < yEnd) {
-              const light = computeLighting(mx, my, isWater);
-              const visual = getVoxelVisual(h, d, maxDist, light, isWater, time);
+              const isTargeted = currentTarget && currentTarget.x === mx && currentTarget.y === my;
+              const light = computeLighting(mx, my, isWater, mat);
+              const visual = getVoxelVisual(h, d, MAX_RAY_DIST, light, mat, isWater, time, isTargeted);
 
               for (let y = yStart; y < yEnd; y++) {
-                const idx = y * cols + c;
-                charBuffer[idx] = visual.char;
-                colorBuffer[idx] = visual.color;
+                const cellIdx = y * cols + c;
+                charBuffer[cellIdx] = visual.char;
+                colorBuffer[cellIdx] = visual.color;
               }
             }
-            // Update highest drawn height
             maxHeight = projY;
-
-            // Early ray termination: column fully occluded to the top of screen
             if (maxHeight <= 0) break;
           }
         }
 
-        // Sky rendering above terrain occlusion
-        const sunAngleOffset = Math.atan2(SUN_DIR.y, SUN_DIR.x);
-        let dSunYaw = (rayAngle - sunAngleOffset) % (Math.PI * 2);
+        // Sky atmosphere & stars
+        const sunYaw = Math.atan2(SUN_DIR.y, SUN_DIR.x);
+        let dSunYaw = (rayAngle - sunYaw) % (Math.PI * 2);
         if (dSunYaw < -Math.PI) dSunYaw += Math.PI * 2;
         if (dSunYaw > Math.PI) dSunYaw -= Math.PI * 2;
 
-        const isNearSunColumn = Math.abs(dSunYaw) < 0.14;
-        const sunCenterRow = Math.floor(horizonY - SUN_DIR.z * rows * 0.8);
+        const isNearSun = Math.abs(dSunYaw) < 0.13;
+        const sunRow = Math.floor(horizonY - SUN_DIR.z * rows * 0.85);
 
         for (let y = 0; y < Math.min(rows, maxHeight); y++) {
-          const idx = y * cols + c;
-          // Sun disc & coronal glow
-          if (isNearSunColumn && Math.abs(y - sunCenterRow) < 2) {
-            charBuffer[idx] = (Math.abs(y - sunCenterRow) === 0 && Math.abs(dSunYaw) < 0.06) ? '☼' : '*';
-            colorBuffer[idx] = '#ffe494';
+          const sIdx = y * cols + c;
+          if (isNearSun && Math.abs(y - sunRow) < 2) {
+            charBuffer[sIdx] = (y === sunRow && Math.abs(dSunYaw) < 0.05) ? '☼' : '*';
+            colorBuffer[sIdx] = '#fef08a';
           } else {
-            // Atmospheric stars & twilight dither
-            const starHash = (c * 37 + y * 97) % 113;
-            if (y < horizonY - 6 && starHash === 0) {
-              charBuffer[idx] = '·';
-              colorBuffer[idx] = '#7e93b8';
-            } else if (y > horizonY - 4) {
-              charBuffer[idx] = ' ';
-              colorBuffer[idx] = '#101728'; // Horizon haze
+            const star = (c * 43 + y * 89) % 127;
+            if (y < horizonY - 6 && star === 0) {
+              charBuffer[sIdx] = '·';
+              colorBuffer[sIdx] = '#64748b';
             }
           }
         }
@@ -387,12 +647,10 @@
     }
 
     /* ==========================================================================
-       6. HIGH-PERFORMANCE MONOSPACE 2D CANVAS DRAW LOOP
+       6. TEXT BATCHED CANVAS RENDER PIPELINE
        ========================================================================== */
-    // Consecutive text spans with identical fillStyle are batched into a single
-    // fillText call, dropping canvas draw calls from ~5000 down to ~200 per frame.
     function renderBufferToScreen() {
-      ctx.fillStyle = '#060814';
+      ctx.fillStyle = '#050711';
       ctx.fillRect(0, 0, screenW, screenH);
 
       const fontSize = Math.floor(cellH * 0.95);
@@ -404,97 +662,135 @@
         const yPos = r * cellH;
 
         let curColor = '';
-        let textBatch = '';
+        let batch = '';
         let startCol = 0;
 
         for (let c = 0; c < cols; c++) {
           const idx = rowOffset + c;
           const char = charBuffer[idx] || ' ';
-          const color = colorBuffer[idx] || '#060814';
+          const color = colorBuffer[idx] || '#050711';
 
           if (color === curColor) {
-            textBatch += char;
+            batch += char;
           } else {
-            if (textBatch.length > 0 && curColor !== '#060814') {
+            if (batch.length > 0 && curColor !== '#050711') {
               ctx.fillStyle = curColor;
-              ctx.fillText(textBatch, startCol * cellW, yPos);
+              ctx.fillText(batch, startCol * cellW, yPos);
             }
             curColor = color;
-            textBatch = char;
+            batch = char;
             startCol = c;
           }
         }
 
-        if (textBatch.length > 0 && curColor !== '#060814') {
+        if (batch.length > 0 && curColor !== '#050711') {
           ctx.fillStyle = curColor;
-          ctx.fillText(textBatch, startCol * cellW, yPos);
+          ctx.fillText(batch, startCol * cellW, yPos);
         }
       }
     }
 
     /* ==========================================================================
-       7. CROSS-PLATFORM INPUT HANDLING (Touch & Desktop)
+       7. MINING & BUILDING VOXEL LOGIC
+       ========================================================================== */
+    function mineBlock() {
+      if (!currentTarget) return;
+      const idx = currentTarget.y * MAP_SIZE + currentTarget.x;
+      const currentH = heightMap[idx];
+
+      // Lower terrain column elevation
+      heightMap[idx] = Math.max(0, currentH - 2.5);
+
+      // Revealing underground stone or water strata
+      if (heightMap[idx] < WATER_LEVEL) {
+        materialMap[idx] = MAT_WATER;
+      } else if (heightMap[idx] < 68.0) {
+        materialMap[idx] = MAT_DIRT;
+      } else {
+        materialMap[idx] = MAT_STONE;
+      }
+      updateTargetRaycast();
+    }
+
+    function buildBlock() {
+      if (!currentTarget) return;
+      const idx = currentTarget.y * MAP_SIZE + currentTarget.x;
+      // Stack blocks upward at target coordinate
+      heightMap[idx] += 2.5;
+      materialMap[idx] = selectedMat;
+      updateTargetRaycast();
+    }
+
+    function triggerJump() {
+      if (player.isGrounded) {
+        player.vz = 24.0;
+        player.isGrounded = false;
+      }
+    }
+
+    /* ==========================================================================
+       8. CONTROLS, INPUT & TOUCH GESTURES
        ========================================================================== */
     const keys = {};
-    const input = { moveX: 0, moveY: 0, sprint: false };
+    const input = { moveX: 0, moveY: 0 };
 
-    // Keyboard Fallback
     window.addEventListener('keydown', (e) => {
       keys[e.code] = true;
-      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.sprint = true;
+      if (e.code === 'Digit1') setHotbarSlot(0);
+      if (e.code === 'Digit2') setHotbarSlot(1);
+      if (e.code === 'Digit3') setHotbarSlot(2);
+      if (e.code === 'Digit4') setHotbarSlot(3);
+      if (e.code === 'Digit5') setHotbarSlot(4);
+      if (e.code === 'Digit6') setHotbarSlot(5);
+      if (e.code === 'Space') { e.preventDefault(); triggerJump(); }
+      if (e.code === 'KeyE') buildBlock();
+      if (e.code === 'KeyQ') mineBlock();
     });
-    window.addEventListener('keyup', (e) => {
-      keys[e.code] = false;
-      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') input.sprint = false;
-    });
+    window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
-    // Mouse Drag to Look Fallback
-    let isMouseDown = false;
-    let mouseLastX = 0, mouseLastY = 0;
+    // Desktop Mouse Handling
     canvas.addEventListener('mousedown', (e) => {
-      isMouseDown = true;
-      mouseLastX = e.clientX;
-      mouseLastY = e.clientY;
+      if (e.button === 0) mineBlock();
+      if (e.button === 2) buildBlock();
     });
-    window.addEventListener('mouseup', () => { isMouseDown = false; });
+    canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+    let isMouseDragging = false;
+    let lastMouseX = 0, lastMouseY = 0;
+    canvas.addEventListener('mousedown', (e) => {
+      isMouseDragging = true;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+    });
+    window.addEventListener('mouseup', () => { isMouseDragging = false; });
     window.addEventListener('mousemove', (e) => {
-      if (!isMouseDown) return;
-      const dx = e.clientX - mouseLastX;
-      const dy = e.clientY - mouseLastY;
+      if (!isMouseDragging) return;
+      const dx = e.clientX - lastMouseX;
+      const dy = e.clientY - lastMouseY;
       player.yaw += dx * 0.005;
       player.pitch = Math.max(-0.45, Math.min(0.45, player.pitch - dy * 0.0035));
-      mouseLastX = e.clientX;
-      mouseLastY = e.clientY;
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
     });
 
-    // Touch Joystick & Look Pad Configuration
-    let joyTouchId = null;
-    let joyBaseX = 0, joyBaseY = 0;
-    let joyKnobX = 0, joyKnobY = 0;
-    const JOY_MAX_RADIUS = 52.0;
+    // Touch Virtual Joystick & Camera Look Surface
+    let joyId = null, joyBaseX = 0, joyBaseY = 0, joyKnobX = 0, joyKnobY = 0;
+    let lookId = null, lookLastX = 0, lookLastY = 0;
+    const JOY_RADIUS = 50.0;
 
-    let lookTouchId = null;
-    let lookLastX = 0, lookLastY = 0;
-
-    // Multi-touch handler with strict default gesture suppression
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
       const halfW = window.innerWidth * 0.5;
 
       for (let i = 0; i < e.changedTouches.length; i++) {
-        const touch = e.changedTouches[i];
-        if (touch.clientX < halfW && joyTouchId === null) {
-          // Left screen half: initialize virtual analog joystick
-          joyTouchId = touch.identifier;
-          joyBaseX = touch.clientX;
-          joyBaseY = touch.clientY;
-          joyKnobX = touch.clientX;
-          joyKnobY = touch.clientY;
-        } else if (touch.clientX >= halfW && lookTouchId === null) {
-          // Right screen half: initialize touch look surface
-          lookTouchId = touch.identifier;
-          lookLastX = touch.clientX;
-          lookLastY = touch.clientY;
+        const t = e.changedTouches[i];
+        if (t.clientX < halfW && joyId === null) {
+          joyId = t.identifier;
+          joyBaseX = t.clientX; joyBaseY = t.clientY;
+          joyKnobX = t.clientX; joyKnobY = t.clientY;
+        } else if (t.clientX >= halfW && lookId === null) {
+          lookId = t.identifier;
+          lookLastX = t.clientX; lookLastY = t.clientY;
         }
       }
     }, { passive: false });
@@ -502,29 +798,27 @@
     canvas.addEventListener('touchmove', (e) => {
       e.preventDefault();
       for (let i = 0; i < e.changedTouches.length; i++) {
-        const touch = e.changedTouches[i];
-        if (touch.identifier === joyTouchId) {
-          const dx = touch.clientX - joyBaseX;
-          const dy = touch.clientY - joyBaseY;
+        const t = e.changedTouches[i];
+        if (t.identifier === joyId) {
+          const dx = t.clientX - joyBaseX;
+          const dy = t.clientY - joyBaseY;
           const dist = Math.hypot(dx, dy);
-
-          if (dist > JOY_MAX_RADIUS) {
-            joyKnobX = joyBaseX + (dx / dist) * JOY_MAX_RADIUS;
-            joyKnobY = joyBaseY + (dy / dist) * JOY_MAX_RADIUS;
+          if (dist > JOY_RADIUS) {
+            joyKnobX = joyBaseX + (dx / dist) * JOY_RADIUS;
+            joyKnobY = joyBaseY + (dy / dist) * JOY_RADIUS;
           } else {
-            joyKnobX = touch.clientX;
-            joyKnobY = touch.clientY;
+            joyKnobX = t.clientX;
+            joyKnobY = t.clientY;
           }
-
-          input.moveX = (joyKnobX - joyBaseX) / JOY_MAX_RADIUS;
-          input.moveY = -(joyKnobY - joyBaseY) / JOY_MAX_RADIUS;
-        } else if (touch.identifier === lookTouchId) {
-          const dx = touch.clientX - lookLastX;
-          const dy = touch.clientY - lookLastY;
+          input.moveX = (joyKnobX - joyBaseX) / JOY_RADIUS;
+          input.moveY = -(joyKnobY - joyBaseY) / JOY_RADIUS;
+        } else if (t.identifier === lookId) {
+          const dx = t.clientX - lookLastX;
+          const dy = t.clientY - lookLastY;
           player.yaw += dx * 0.0065;
           player.pitch = Math.max(-0.45, Math.min(0.45, player.pitch - dy * 0.0045));
-          lookLastX = touch.clientX;
-          lookLastY = touch.clientY;
+          lookLastX = t.clientX;
+          lookLastY = t.clientY;
         }
       }
     }, { passive: false });
@@ -532,98 +826,120 @@
     function handleTouchEnd(e) {
       e.preventDefault();
       for (let i = 0; i < e.changedTouches.length; i++) {
-        const touch = e.changedTouches[i];
-        if (touch.identifier === joyTouchId) {
-          joyTouchId = null;
-          input.moveX = 0;
-          input.moveY = 0;
-        } else if (touch.identifier === lookTouchId) {
-          lookTouchId = null;
+        const t = e.changedTouches[i];
+        if (t.identifier === joyId) {
+          joyId = null;
+          input.moveX = 0; input.moveY = 0;
+        } else if (t.identifier === lookId) {
+          lookId = null;
         }
       }
     }
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
     canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-    // Render virtual joystick on canvas
-    function drawVirtualJoystick() {
-      if (joyTouchId === null) return;
+    // Action button listeners
+    const btnMine = document.getElementById('btn-mine');
+    const btnBuild = document.getElementById('btn-build');
+    const btnJump = document.getElementById('btn-jump');
+
+    btnMine.addEventListener('touchstart', (e) => { e.stopPropagation(); mineBlock(); });
+    btnBuild.addEventListener('touchstart', (e) => { e.stopPropagation(); buildBlock(); });
+    btnJump.addEventListener('touchstart', (e) => { e.stopPropagation(); triggerJump(); });
+    btnMine.addEventListener('click', mineBlock);
+    btnBuild.addEventListener('click', buildBlock);
+    btnJump.addEventListener('click', triggerJump);
+
+    // Hotbar click selection
+    const slots = document.querySelectorAll('.hotbar-slot');
+    function setHotbarSlot(idx) {
+      slots.forEach((s, i) => {
+        if (i === idx) {
+          s.classList.add('active');
+          selectedMat = parseInt(s.getAttribute('data-mat'), 10);
+        } else {
+          s.classList.remove('active');
+        }
+      });
+    }
+    slots.forEach((s, idx) => {
+      s.addEventListener('click', (e) => { e.stopPropagation(); setHotbarSlot(idx); });
+      s.addEventListener('touchstart', (e) => { e.stopPropagation(); setHotbarSlot(idx); });
+    });
+
+    function drawTouchJoystick() {
+      if (joyId === null) return;
       ctx.save();
-      // Outer boundary ring
       ctx.lineWidth = 2.5;
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
       ctx.beginPath();
-      ctx.arc(joyBaseX, joyBaseY, JOY_MAX_RADIUS, 0, Math.PI * 2);
+      ctx.arc(joyBaseX, joyBaseY, JOY_RADIUS, 0, Math.PI * 2);
       ctx.stroke();
 
-      // Inner movable knob
       ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
       ctx.beginPath();
-      ctx.arc(joyKnobX, joyKnobY, 20, 0, Math.PI * 2);
+      ctx.arc(joyKnobX, joyKnobY, 18, 0, Math.PI * 2);
       ctx.fill();
       ctx.restore();
     }
 
     /* ==========================================================================
-       8. PHYSICS, COLLISION & GAME LOOP (Delta-Time Normalized)
+       9. PHYSICS, COLLISION & SIMULATION LOOP
        ========================================================================== */
     function updatePhysics(dt) {
-      // Gather keyboard input if not currently using touch joystick
-      if (joyTouchId === null) {
-        input.moveX = 0;
-        input.moveY = 0;
+      if (joyId === null) {
+        input.moveX = 0; input.moveY = 0;
         if (keys['KeyW'] || keys['ArrowUp']) input.moveY += 1.0;
         if (keys['KeyS'] || keys['ArrowDown']) input.moveY -= 1.0;
         if (keys['KeyA']) input.moveX -= 1.0;
         if (keys['KeyD']) input.moveX += 1.0;
-        if (keys['KeyQ'] || keys['ArrowLeft']) player.yaw -= 1.8 * dt;
-        if (keys['KeyE'] || keys['ArrowRight']) player.yaw += 1.8 * dt;
+        if (keys['ArrowLeft']) player.yaw -= 2.0 * dt;
+        if (keys['ArrowRight']) player.yaw += 2.0 * dt;
       }
 
-      // Movement vector normalization
       let mx = input.moveX;
       let my = input.moveY;
       const mag = Math.hypot(mx, my);
-      if (mag > 1.0) {
-        mx /= mag;
-        my /= mag;
+      if (mag > 1.0) { mx /= mag; my /= mag; }
+
+      let moveSpeed = player.speed;
+      const curH = sampleTerrain(player.x, player.y);
+      if (curH < WATER_LEVEL) moveSpeed *= 0.55;
+
+      const fX = Math.cos(player.yaw), fY = Math.sin(player.yaw);
+      const rX = -Math.sin(player.yaw), rY = Math.cos(player.yaw);
+
+      const vx = (fX * my + rX * mx) * moveSpeed;
+      const vy = (fY * my + rY * mx) * moveSpeed;
+
+      const nx = (player.x + vx * dt) & MAP_MASK;
+      const ny = (player.y + vy * dt) & MAP_MASK;
+      const nextH = sampleTerrain(nx, ny);
+
+      // Block step climbing (up to 3.5 units slope threshold)
+      if (nextH - curH < 4.0 || !player.isGrounded) {
+        player.x = nx;
+        player.y = ny;
       }
 
-      // Compute speed with sprint & water drag modifiers
-      let currentSpeed = player.speed * (input.sprint ? 1.6 : 1.0);
-      const curGroundH = sampleTerrain(player.x, player.y);
-      if (curGroundH < WATER_LEVEL) {
-        currentSpeed *= 0.6; // Swimming drag penalty
+      // Vertical gravity and jump dynamics
+      const groundZ = Math.max(nextH, WATER_LEVEL) + player.eyeHeight;
+      player.vz -= 68.0 * dt; // Gravity
+      player.z += player.vz * dt;
+
+      if (player.z <= groundZ) {
+        player.z = groundZ;
+        player.vz = 0;
+        player.isGrounded = true;
+      } else {
+        player.isGrounded = false;
       }
 
-      // Camera orientation relative movement vectors
-      const forwardX = Math.cos(player.yaw);
-      const forwardY = Math.sin(player.yaw);
-      const rightX = -Math.sin(player.yaw);
-      const rightY = Math.cos(player.yaw);
-
-      const vx = (forwardX * my + rightX * mx) * currentSpeed;
-      const vy = (forwardY * my + rightY * mx) * currentSpeed;
-
-      // Slope collision & steep cliff wall blocking
-      const nextX = (player.x + vx * dt) & MAP_MASK;
-      const nextY = (player.y + vy * dt) & MAP_MASK;
-      const nextH = sampleTerrain(nextX, nextY);
-
-      // Max climb step: prevents scaling sheer vertical cliffs (> 14 units jump)
-      if (nextH - curGroundH < 14.0) {
-        player.x = nextX;
-        player.y = nextY;
-      }
-
-      // Elevation clamping with smooth spring damping
-      const groundZ = Math.max(nextH, WATER_LEVEL);
-      player.targetZ = groundZ + player.eyeHeight;
-      player.z += (player.targetZ - player.z) * Math.min(1.0, dt * 10.0);
+      updateTargetRaycast();
     }
 
     /* ==========================================================================
-       9. RESPONSIVE RESIZING & DYNAMIC GRID RESOLUTION
+       10. RESIZE & MAIN LOOP
        ========================================================================== */
     function resizeDisplay() {
       screenW = window.innerWidth;
@@ -631,7 +947,6 @@
       canvas.width = screenW;
       canvas.height = screenH;
 
-      // Adapt grid density based on screen dimensions for crisp text & 60+ FPS
       cols = Math.min(128, Math.max(64, Math.floor(screenW / 9.5)));
       rows = Math.min(72, Math.max(38, Math.floor(screenH / 15.5)));
 
@@ -643,63 +958,49 @@
     }
     window.addEventListener('resize', resizeDisplay);
 
-    /* ==========================================================================
-       10. HUD DISPLAY & MAIN ANIMATION LOOP
-       ========================================================================== */
     const hudLeft = document.getElementById('hud-left');
     const hudCenter = document.getElementById('hud-center');
     const hudRight = document.getElementById('hud-right');
-    const controlsHint = document.getElementById('controls-hint');
 
-    let lastFrameTime = performance.now();
-    let frameCounter = 0;
+    let lastTime = performance.now();
+    let frameCount = 0;
     let fpsTimer = 0;
-    let currentFps = 60;
-
-    // Direction headings
-    const HEADINGS = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    let fps = 60;
 
     function updateHUD(dt) {
-      frameCounter++;
+      frameCount++;
       fpsTimer += dt;
       if (fpsTimer >= 0.5) {
-        currentFps = Math.round(frameCounter / fpsTimer);
-        frameCounter = 0;
+        fps = Math.round(frameCount / fpsTimer);
+        frameCount = 0;
         fpsTimer = 0;
       }
+      hudLeft.textContent = `VOXEL-CRAFT // FPS: ${fps}`;
 
-      // Normalize yaw to heading [0, 360)
-      let deg = ((player.yaw * 180.0 / Math.PI) + 90.0) % 360.0;
-      if (deg < 0) deg += 360.0;
-      const headingIdx = Math.round(deg / 45.0) % 8;
+      const h = sampleTerrain(player.x, player.y);
+      let biome = "HIGHLAND PLAINS";
+      if (h < WATER_LEVEL + 2) biome = "OCEAN COAST";
+      else if (h > 110) biome = "ALPINE PEAKS";
+      else if (materialMap[(player.y & MAP_MASK) * MAP_SIZE + (player.x & MAP_MASK)] === MAT_WOOD) biome = "DENSE TAIGA";
 
-      hudLeft.textContent = `VOXEL-ASCII // FPS: ${currentFps}`;
-      hudCenter.textContent = `HEADING: [ ${HEADINGS[headingIdx]} ] (${Math.floor(deg)}°)`;
-
-      const altitudeMeters = Math.max(0, Math.floor(player.z - WATER_LEVEL));
-      hudRight.textContent = `POS: (${Math.floor(player.x)}, ${Math.floor(player.y)}) | ALT: ${altitudeMeters}m`;
+      hudCenter.textContent = `BIOME: ${biome}`;
+      hudRight.textContent = `POS: (${Math.floor(player.x)}, ${Math.floor(player.y)}) | ALT: ${Math.max(0, Math.floor(player.z - WATER_LEVEL))}m`;
     }
 
-    // Fade control guide out after 7 seconds
-    setTimeout(() => {
-      controlsHint.style.opacity = '0';
-    }, 7000);
-
     function gameLoop(now) {
-      const dt = Math.min((now - lastFrameTime) / 1000.0, 0.1); // Clamp delta time against large jumps
-      lastFrameTime = now;
+      const dt = Math.min((now - lastTime) / 1000.0, 0.1);
+      lastTime = now;
 
       updatePhysics(dt);
       renderRaycastScene(now * 0.001);
       renderBufferToScreen();
-      drawVirtualJoystick();
+      drawTouchJoystick();
       updateHUD(dt);
 
       requestAnimationFrame(gameLoop);
     }
 
-    // Initialize environment and launch engine
-    generateWorld();
+    generateDetailedWorld();
     resizeDisplay();
     requestAnimationFrame(gameLoop);
   </script>
