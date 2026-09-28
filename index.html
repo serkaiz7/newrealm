@@ -1,1245 +1,967 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <title>The Mansion of the Unholy Vows // Castle Valak</title>
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      -webkit-touch-callout: none;
-      -webkit-user-select: none;
-      user-select: none;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow: hidden;
-      background-color: #020204;
-      touch-action: none;
-      position: fixed;
-      font-family: 'Courier New', Courier, monospace;
-      color: #e2e8f0;
-    }
-
-    #game-canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-      touch-action: none;
-    }
-
-    /* ================= STREAMER HUD (USER-1) ================= */
-    #stream-header {
-      position: absolute;
-      top: 8px;
-      left: 10px;
-      right: 10px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      pointer-events: none;
-      z-index: 20;
-      font-size: 11px;
-      font-weight: bold;
-      text-shadow: 0 0 4px #000;
-    }
-
-    .badge-live {
-      background: #dc2626;
-      color: #fff;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 10px;
-      letter-spacing: 1px;
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      animation: pulse-red 1.2s infinite ease-in-out;
-    }
-    @keyframes pulse-red {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-
-    #stream-stats {
-      display: flex;
-      gap: 10px;
-      background: rgba(8, 10, 18, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 4px 10px;
-      border-radius: 6px;
-    }
-
-    /* USER-1 Selfie Stream Camera (Top Right) */
-    #selfie-cam {
-      position: absolute;
-      top: 38px;
-      right: 10px;
-      background: rgba(10, 12, 22, 0.92);
-      border: 1.5px solid #38bdf8;
-      border-radius: 6px;
-      padding: 4px 6px;
-      font-size: 8px;
-      line-height: 1.05;
-      color: #cbd5e1;
-      white-space: pre;
-      pointer-events: none;
-      z-index: 20;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-    }
-    #selfie-title {
-      font-size: 7px;
-      color: #38bdf8;
-      font-weight: bold;
-      margin-bottom: 2px;
-      display: flex;
-      justify-content: space-between;
-    }
-
-    /* Live Chat Stream Overlay */
-    #chat-box {
-      position: absolute;
-      top: 38px;
-      left: 10px;
-      width: 210px;
-      max-height: 90px;
-      display: flex;
-      flex-direction: column;
-      justify-content: flex-end;
-      overflow: hidden;
-      pointer-events: none;
-      z-index: 15;
-      font-size: 9px;
-      line-height: 1.25;
-      text-shadow: 1px 1px 2px #000;
-    }
-    .chat-msg { margin-bottom: 2px; opacity: 0.92; }
-    .chat-user { color: #38bdf8; font-weight: bold; }
-    .chat-warn { color: #f87171; font-weight: bold; }
-
-    /* Objectives Checklist (Middle Right) */
-    #objective-card {
-      position: absolute;
-      top: 155px;
-      right: 10px;
-      background: rgba(10, 12, 20, 0.88);
-      border: 1px solid rgba(239, 68, 68, 0.4);
-      padding: 6px 10px;
-      border-radius: 6px;
-      font-size: 9px;
-      pointer-events: none;
-      z-index: 15;
-      text-align: right;
-    }
-    .relic-item { margin-top: 2px; }
-    .relic-found { color: #4ade80; text-decoration: line-through; }
-    .relic-missing { color: #facc15; }
-
-    /* Panic Heartbeat Vignette Overlay */
-    #panic-vignette {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      box-shadow: inset 0 0 0px rgba(220, 38, 38, 0);
-      transition: box-shadow 0.2s ease-out;
-      z-index: 12;
-    }
-
-    /* Screen Glitch on Valak Proximity */
-    #glitch-overlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      opacity: 0;
-      mix-blend-mode: screen;
-      background: repeating-linear-gradient(0deg, rgba(0,255,200,0.08) 0px, rgba(255,0,60,0.1) 2px, transparent 4px);
-      z-index: 13;
-    }
-
-    #reticle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 18px;
-      pointer-events: none;
-      z-index: 10;
-    }
-
-    #interaction-prompt {
-      position: absolute;
-      top: 56%;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.95);
-      border: 1px solid #facc15;
-      color: #fef08a;
-      padding: 4px 10px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: bold;
-      pointer-events: none;
-      display: none;
-      z-index: 20;
-      white-space: nowrap;
-    }
-
-    /* ================= MOBILE CONTROLS ================= */
-    .touch-btn {
-      width: 48px;
-      height: 48px;
-      background: rgba(15, 23, 42, 0.78);
-      border: 1.5px solid rgba(255, 255, 255, 0.35);
-      border-radius: 8px;
-      color: #fff;
-      font-size: 15px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      touch-action: none;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.6);
-    }
-    .touch-btn:active, .touch-btn.active {
-      background: rgba(220, 38, 38, 0.65);
-      border-color: #ef4444;
-      transform: scale(0.92);
-    }
-
-    #dpad {
-      position: absolute;
-      bottom: 20px;
-      left: 14px;
-      display: grid;
-      grid-template-columns: repeat(3, 48px);
-      grid-template-rows: repeat(3, 48px);
-      gap: 5px;
-      z-index: 30;
-    }
-
-    #action-pad {
-      position: absolute;
-      bottom: 20px;
-      right: 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      z-index: 30;
-    }
-    .action-circle {
-      width: 54px;
-      height: 54px;
-      border-radius: 50%;
-      font-size: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-    }
-    #btn-interact { background: rgba(16, 185, 129, 0.8); border-color: #34d399; }
-    #btn-light { background: rgba(234, 179, 8, 0.8); border-color: #fde047; }
-    #btn-sprint { background: rgba(59, 130, 246, 0.8); border-color: #60a5fa; }
-
-    /* Fullscreen Jumpscare & Game Over Modal */
-    #modal {
-      position: absolute;
-      inset: 0;
-      background: rgba(4, 5, 10, 0.96);
-      display: none;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      z-index: 100;
-      padding: 20px;
-      text-align: center;
-    }
-    #jumpscare-face {
-      font-size: 10px;
-      line-height: 1.05;
-      white-space: pre;
-      color: #f87171;
-      margin-bottom: 12px;
-      font-weight: bold;
-      text-shadow: 0 0 8px #ef4444;
-    }
-    #modal h1 { font-size: 26px; margin-bottom: 10px; letter-spacing: 2px; }
-    #modal p { font-size: 12px; max-width: 420px; line-height: 1.5; color: #94a3b8; margin-bottom: 18px; }
-    #modal button {
-      background: #dc2626;
-      color: #fff;
-      border: none;
-      padding: 12px 24px;
-      border-radius: 6px;
-      font-size: 12px;
-      font-weight: bold;
-      cursor: pointer;
-      font-family: inherit;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ASCII 3D Engine — Castle of the Frostspire</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+  body, html {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background-color: #030712;
+    color: #e2e8f0;
+    font-family: 'Courier New', Courier, monospace;
+  }
+  #canvas-container {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  canvas {
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    image-rendering: pixelated;
+  }
+  /* Retro Blueprint & Reference-Sheet HUD */
+  #hud {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 16px;
+    font-size: 11px;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 4px rgba(56, 189, 248, 0.6);
+  }
+  .panel {
+    background: rgba(8, 15, 30, 0.78);
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    padding: 8px 12px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(2px);
+  }
+  .hud-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .title-block h1 {
+    font-size: 14px;
+    color: #38bdf8;
+    letter-spacing: 1.5px;
+    margin-bottom: 2px;
+  }
+  .title-block div { color: #94a3b8; font-size: 10px; }
+  .hud-stats { text-align: right; line-height: 1.4; color: #cbd5e1; }
+  .compass { color: #38bdf8; font-weight: bold; }
+  .hud-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+  .minimap-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  #minimap {
+    font-size: 8px;
+    line-height: 7px;
+    letter-spacing: 1px;
+    white-space: pre;
+    color: #38bdf8;
+    background: rgba(3, 7, 18, 0.9);
+    padding: 4px 6px;
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    margin-top: 4px;
+  }
+  .controls-panel {
+    max-width: 480px;
+    line-height: 1.4;
+    color: #94a3b8;
+  }
+  .controls-panel span { color: #38bdf8; }
+  #crosshair {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(56, 189, 248, 0.7);
+    font-size: 14px;
+    pointer-events: none;
+  }
+  #click-prompt {
+    position: absolute;
+    top: 20%; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(3, 7, 18, 0.85);
+    border: 1px solid #38bdf8;
+    color: #38bdf8;
+    padding: 6px 14px;
+    font-size: 11px;
+    border-radius: 2px;
+    pointer-events: none;
+    transition: opacity 0.3s;
+  }
+</style>
 </head>
 <body>
-  <!-- Streamer Camera HUD -->
-  <div id="stream-header">
-    <div>
-      <span class="badge-live">● LIVE</span>
-      <span style="margin-left: 6px; color:#f87171;">USER-1 // CASTLE VALAK</span>
+
+<div id="canvas-container">
+  <canvas id="glcanvas"></canvas>
+</div>
+
+<div id="crosshair">+</div>
+<div id="click-prompt">CLICK TO ENGAGE POINTER-LOCK LOOK</div>
+
+<div id="hud">
+  <div class="hud-top">
+    <div class="panel title-block">
+      <h1>LOCATION: CASTLE VALAK &amp; THE FROSTFOREST</h1>
+      <div>HEIGHTMAP RAYCASTER • 1 DRAW CALL ASCII GPU STAMPER</div>
     </div>
-    <div id="stream-stats">
-      <span id="hud-viewers">👥 2,410</span>
-      <span id="hud-battery">🔋 100%</span>
-      <span id="hud-bpm" style="color:#ef4444;">💓 75 BPM</span>
+    <div class="panel hud-stats">
+      <div>POS: <span id="pos-display">0.0, 0.0, 0.0</span></div>
+      <div>HEADING: <span id="compass-display" class="compass">N [0°]</span></div>
+      <div>SECTOR: <span id="sector-display">SNOWY FOREST</span></div>
+      <div>CELL: <span id="cell-stats">F: 0.0 | R: 99.0 | A: 0.0</span></div>
     </div>
   </div>
 
-  <!-- Live Streamer Selfie Cam: USER-1 (Youthful Blogger) Character Reference -->
-  <div id="selfie-cam">
-    <div id="selfie-title"><span>CAM 1: USER-1</span><span style="color:#22c55e">REC ●</span></div>
-    <div id="selfie-art"></div>
+  <div class="hud-bottom">
+    <div class="panel minimap-box">
+      <div>TACTICAL SCAN (32x32)</div>
+      <div id="minimap"></div>
+    </div>
+    <div class="panel controls-panel">
+      <div><span>[W/A/S/D]</span> Move & Strafe | <span>[MOUSE / ARROWS]</span> Look (Yaw / Pitch)</div>
+      <div><span>[SPACE]</span> Jump / Climb | <span>[SHIFT]</span> Sprint | <span>[H]</span> Toggle HUD</div>
+      <div style="font-size: 9px; margin-top: 4px; color: #64748b;">
+        WORLD ARCHITECTURE: Procedural Heightmap with Vaulted Arch Profile Curves
+      </div>
+    </div>
   </div>
+</div>
 
-  <!-- Live Chat Stream -->
-  <div id="chat-box"></div>
+<script>
+// ============================================================================
+// 1. ENGINE CONSTANTS & ASCII GRID SETUP
+// ============================================================================
+const COLS = 160;   // Character columns across screen
+const ROWS = 64;    // Character rows down screen
+const FOV = 1.15;   // Field of view in radians (~66 degrees)
 
-  <!-- Key Objectives Checklist -->
-  <div id="objective-card">
-    <div style="font-weight:bold; color:#ef4444; margin-bottom:3px;">SEALS TO ESCAPE:</div>
-    <div id="relic-1" class="relic-item relic-missing">1. Archivist Key [Library]</div>
-    <div id="relic-2" class="relic-item relic-missing">2. Desecrated Chalice [Chapel]</div>
-    <div id="relic-3" class="relic-item relic-missing">3. Nun's Scythe [Chambers]</div>
-    <div id="relic-gate" style="margin-top:4px; font-weight:bold; color:#94a3b8;">GATE: LOCKED [3/3 Left]</div>
-  </div>
+// Material IDs
+const MAT_SNOW        = 1;
+const MAT_WATER       = 2;
+const MAT_BRIDGE      = 3;
+const MAT_STAIRS      = 4;
+const MAT_CASTLE_WALL = 5;
+const MAT_GREEN_GATE  = 6;
+const MAT_COURTYARD   = 7;
+const MAT_PINE_TREE   = 8;
+const MAT_TOWER       = 9;
 
-  <div id="panic-vignette"></div>
-  <div id="glitch-overlay"></div>
-  <div id="reticle">+</div>
-  <div id="interaction-prompt">[E] EXAMINE / PICK UP</div>
+// ============================================================================
+// 2. HEIGHTMAP GENERATION (FLOOR, ROOF, ARCH CURVE)
+// ============================================================================
+// Each cell stores:
+// - floor: ground elevation
+// - roof: ceiling elevation (open sky is 999.0)
+// - arch: arch curvature coefficient (0 = flat, >0 = vaulted parabolic arch)
+// - mat: material identifier
+// - archAxis: 'X' or 'Y' (transverse direction of the archway)
+const MAP_W = 48;
+const MAP_H = 48;
+const mapGrid = new Array(MAP_W * MAP_H);
 
-  <!-- Mobile Controls -->
-  <div id="dpad">
-    <div></div>
-    <div class="touch-btn" data-k="KeyW">▲</div>
-    <div></div>
-    <div class="touch-btn" data-k="KeyA">◀</div>
-    <div class="touch-btn" data-k="KeyS">▼</div>
-    <div class="touch-btn" data-k="KeyD">▶</div>
-  </div>
+function getCell(x, y) {
+  const ix = Math.floor(x);
+  const iy = Math.floor(y);
+  if (ix < 0 || ix >= MAP_W || iy < 0 || iy >= MAP_H) {
+    return { floor: 6.0, roof: 0.0, arch: 0.0, mat: MAT_CASTLE_WALL, archAxis: 'X' };
+  }
+  return mapGrid[iy * MAP_W + ix];
+}
 
-  <div id="action-pad">
-    <div id="btn-interact" class="touch-btn action-circle"><span>🖐</span>USE</div>
-    <div id="btn-light" class="touch-btn action-circle"><span>🔦</span>LIGHT</div>
-    <div id="btn-sprint" class="touch-btn action-circle"><span>🏃</span>RUN</div>
-  </div>
-
-  <!-- Game Over / Jumpscare Modal -->
-  <div id="modal">
-    <div id="jumpscare-face"></div>
-    <h1 id="modal-title">ACCURSED</h1>
-    <p id="modal-desc">Valak claimed your soul for the unholy altar.</p>
-    <button onclick="restartGame()">RETRY STREAM</button>
-  </div>
-
-  <canvas id="game-canvas"></canvas>
-
-  <script>
-    /* ==========================================================================
-       1. SYNTHESIZED AUDIO ENGINE (Web Audio API - Zero External Dependencies)
-       ========================================================================== */
-    let audioCtx = null;
-    function initAudio() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-
-    function playSound(type) {
-      if (!audioCtx) return;
-      const t = audioCtx.currentTime;
-
-      if (type === 'heartbeat') {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.frequency.setValueAtTime(65, t);
-        osc.frequency.exponentialRampToValueAtTime(32, t + 0.12);
-        gain.gain.setValueAtTime(0.45, t);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.15);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(t); osc.stop(t + 0.15);
-      } else if (type === 'pickup') {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(440, t);
-        osc.frequency.exponentialRampToValueAtTime(880, t + 0.25);
-        gain.gain.setValueAtTime(0.3, t);
-        gain.gain.linearRampToValueAtTime(0.01, t + 0.3);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(t); osc.stop(t + 0.3);
-      } else if (type === 'cat-purr') {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(560, t);
-        osc.frequency.exponentialRampToValueAtTime(760, t + 0.15);
-        osc.frequency.exponentialRampToValueAtTime(520, t + 0.35);
-        gain.gain.setValueAtTime(0.2, t);
-        gain.gain.linearRampToValueAtTime(0.01, t + 0.4);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(t); osc.stop(t + 0.4);
-      } else if (type === 'screech') {
-        const osc1 = audioCtx.createOscillator();
-        const osc2 = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc1.type = 'sawtooth'; osc2.type = 'square';
-        osc1.frequency.setValueAtTime(880, t);
-        osc1.frequency.exponentialRampToValueAtTime(200, t + 0.7);
-        osc2.frequency.setValueAtTime(920, t);
-        osc2.frequency.exponentialRampToValueAtTime(220, t + 0.7);
-        gain.gain.setValueAtTime(0.65, t);
-        gain.gain.exponentialRampToValueAtTime(0.01, t + 0.75);
-        osc1.connect(gain); osc2.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc1.start(t); osc2.start(t);
-        osc1.stop(t + 0.75); osc2.stop(t + 0.75);
-      } else if (type === 'footstep') {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(90, t);
-        osc.frequency.linearRampToValueAtTime(35, t + 0.05);
-        gain.gain.setValueAtTime(0.12, t);
-        gain.gain.linearRampToValueAtTime(0.01, t + 0.06);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(t); osc.stop(t + 0.06);
-      }
-    }
-
-    /* ==========================================================================
-       2. EXACT CHARACTER ART MATRICES (EMBEDDED FROM REFERENCE SHEETS)
-       ========================================================================== */
-    // --- 1. VALAK - THE UNHOLY NUN (Character Sheet 1.0) ---
-    // Features: Layered white wimple, dead pale face, staring black hollow eyes [O O],
-    // dangling rosary with golden cross, dark habit, and large curved spectral scythe.
-    const VALAK_MATRIX = [
-      "      _..._        /|",
-      "    .'#####'.     / |",
-      "   / %######% \\   |  |",
-      "  | %#[O   O]#% | |  |",
-      "  | %#  ---  #% | |  |",
-      "   \\ '######' /   |  |",
-      "   .'--*†*---'.   |  |",
-      "  /    *|*     \\  | / ",
-      " |     *†*      | |/  ",
-      " |   %######%   | /   ",
-      " |  %########%  |/    ",
-      " | %##########% |     ",
-      " / %##########% \\     ",
-      "|  %##########%  |    ",
-      "'--------------' '    "
-    ];
-
-    const VALAK_COLORS = [
-      "      wwwww        cc",
-      "    .wwwwwww.     c c",
-      "   w wwwwwww w   c  c",
-      "  w ww[Y   Y]ww w c  c",
-      "  w ww  www  ww w c  c",
-      "   w 'wwwwww' w   c  c",
-      "   .---rYr---.   c  c",
-      "  /    r|r    \\  c / ",
-      " |     rYr     | c/  ",
-      " |   dddddddd   | /   ",
-      " |  dddddddddd  |/    ",
-      " | dddddddddddd |     ",
-      " / dddddddddddd \\     ",
-      "|  dddddddddddd  |    ",
-      "dddddddddddddddd d    "
-    ];
-
-    // --- 2. FELIX - THE PHANTOM FELINE (Cat Reference Sheet 1.0) ---
-    // Features: Pointed triangular ears, piercing feline eyes, spectral astral fur,
-    // golden moonward collar charm (C), and curled tail.
-    const FELIX_MATRIX = [
-      " /\\_ /\\          ",
-      "( ='.' )   _     ",
-      " (-(C)-)  ( \\    ",
-      " /     \\   ) )   ",
-      "( || || )--' /   ",
-      " '' '' ''---'    "
-    ];
-
-    const FELIX_COLORS = [
-      " ccc cc          ",
-      "c cYcY c   c     ",
-      " c-(Y)-c  c c    ",
-      " c     c   c c   ",
-      "c cc cc cccc c   ",
-      " cc cc cccccc    "
-    ];
-
-    // --- 3. USER-1 (Youthful Blogger) Live Selfie Camera Feed ---
-    // Features: Beanie with patch, spiky bangs, hoodie collar, and phone light reflection.
-    function getUser1SelfieArt(panicLevel) {
-      const eyeChar = panicLevel > 130 ? "O O" : (panicLevel > 95 ? "o o" : "· ·");
-      const mouthChar = panicLevel > 130 ? " O " : (panicLevel > 95 ? " - " : " _ ");
-      const sweat = panicLevel > 120 ? "°" : " ";
-      return [
-        "  .--------.   ",
-        " / [STREAM] \\  ",
-        "|------------| ",
-        `|  /\\   /\\  |${sweat}`,
-        `| ( ${eyeChar} ) | `,
-        `|  \\ ${mouthChar} /  | `,
-        " '----. .----' ",
-        "  /===\\ /===\\  ",
-        " |  [USER-1] | "
-      ].join("\n");
-    }
-
-    // --- 4. FIRST-PERSON VIEWMODEL: Blogger's Hand Holding Phone ---
-    // Rendered on the bottom right of the player's screen.
-    const HAND_PHONE_VIEWMODEL = [
-      "       .-------.       ",
-      "       | O   * | [REC] ",
-      "       | .---. |       ",
-      "       | | ☼ | |       ",
-      "       | '---' |       ",
-      "    _  |  [=]  |       ",
-      "  .' ' |-------'       ",
-      " / /| |/  /|           ",
-      "| | | |  / |           ",
-      " \\ \\ \\ \\/ /            ",
-      "  '------'             "
-    ];
-
-    /* ==========================================================================
-       3. MANSION ENVIRONMENT (From Mansion Location References 1.0 & 1.1)
-       ========================================================================== */
-    const MAP_W = 28, MAP_H = 28;
-
-    // Tile Legend:
-    // 0: Floor
-    // 1: Stronghold Stone Wall (Castle Valak)
-    // 2: Library Bookshelves (The Library of Forbidden Texts)
-    // 3: Gothic Wall with Inverted Crucifixes (The Desecrated Chapel)
-    // 4: Ossuary Bone Wall (The Catacombs)
-    // 5: Damask Curtained Wall (The Abbess's Chambers)
-    // 6: Grand Entrance Exit Gate
-    // 7: Spectral Pit (DoT Hazard)
-    // 8: Blood Fountain Basin
-    const MAP = [
-      1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-      1,0,0,0,1,0,0,0,0,0,1,2,2,2,2,2,1,0,0,0,0,0,1,4,4,4,4,1,
-      1,0,0,0,1,0,0,0,0,0,1,2,0,0,0,2,1,0,0,0,0,0,1,4,7,7,4,1,
-      1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,1,0,0,0,0,0,1,4,7,7,4,1,
-      1,0,0,0,1,0,0,0,0,0,1,2,0,0,0,2,1,0,0,0,0,0,0,0,0,0,4,1,
-      1,1,0,1,1,0,0,0,0,0,1,2,2,0,2,2,1,0,0,0,0,0,1,4,4,0,4,1,
-      1,0,0,0,1,0,0,8,0,0,1,1,1,0,1,1,1,0,0,0,0,0,1,1,1,0,1,1,
-      1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-      1,1,0,1,1,0,0,0,0,0,1,1,1,0,1,1,1,0,0,0,0,0,1,1,1,0,1,1,
-      1,0,0,0,1,0,0,0,0,0,1,5,5,0,5,5,1,0,0,0,0,0,1,3,3,0,3,1,
-      1,0,0,0,0,0,0,0,0,0,1,5,0,0,0,5,1,0,0,0,0,0,1,3,0,0,3,1,
-      1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,5,1,0,0,0,0,0,0,0,0,0,3,1,
-      1,1,1,1,1,0,0,0,0,0,1,5,0,0,0,5,1,0,0,0,0,0,1,3,0,0,3,1,
-      1,0,0,0,0,0,0,0,0,0,1,5,5,5,5,5,1,0,0,8,0,0,1,3,3,3,3,1,
-      1,0,0,0,0,0,0,0,0,0,1,1,1,1,1,1,1,0,0,0,0,0,1,1,1,1,1,1,
-      1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-      1,1,1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-      1,0,0,0,1,0,0,0,0,0,1,1,1,0,1,1,1,0,0,0,0,0,1,1,1,1,1,1,
-      1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,
-      1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-      1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1,
-      1,1,0,1,1,1,0,1,1,1,1,0,0,0,0,0,1,1,1,0,1,1,1,1,1,0,1,1,
-      1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-      1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-      1,0,0,0,0,0,0,0,0,0,0,0,0,6,6,0,0,0,0,0,0,0,0,0,0,0,0,1,
-      1,0,0,0,0,0,0,0,0,0,0,0,0,6,6,0,0,0,0,0,0,0,0,0,0,0,0,1,
-      1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
-      1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1
-    ];
-
-    /* ==========================================================================
-       4. GAME STATE: PLAYER, VALAK & FELIX
-       ========================================================================== */
-    const player = {
-      x: 2.5, y: 2.5, // Spawns inside locked room
-      dirX: 1, dirY: 0,
-      planeX: 0, planeY: 0.66,
-      rotSpeed: 2.5,
-      speed: 3.3,
-      bpm: 75,
-      battery: 100.0,
-      flashlightOn: true,
-      sprinting: false,
-      relics: { key: false, chalice: false, scythe: false },
-      isAlive: true,
-      bobPhase: 0
+// Build the complete scene:
+// - Snowy Pine Forest (South)
+// - River with Water (Center)
+// - Wooden Bridge over Water (Connecting South to North)
+// - Dark Stone Stairs (Rising up to the Castle)
+// - Stone Castle Wall with Battlements and Towers
+// - Green Gate set within a Vaulted Archway (arch curve parameter active)
+for (let y = 0; y < MAP_H; y++) {
+  for (let x = 0; x < MAP_W; x++) {
+    const idx = y * MAP_W + x;
+    // Default open snowy ground
+    let cell = {
+      floor: 0.0,
+      roof: 999.0,
+      arch: 0.0,
+      mat: MAT_SNOW,
+      archAxis: 'X'
     };
 
-    const valak = {
-      x: 24.5, y: 24.5,
-      speed: 2.2,
-      chasing: false,
-      visible: true
-    };
-
-    const felix = {
-      x: 13.5, y: 2.5,
-      hintTimer: 0
-    };
-
-    const relics = [
-      { id: 'key', name: "Archivist's Key", x: 14.5, y: 3.5, found: false, glyph: '⚿', color: '#38bdf8' },
-      { id: 'chalice', name: "Desecrated Chalice", x: 25.5, y: 12.5, found: false, glyph: '🍷', color: '#f87171' },
-      { id: 'scythe', name: "Nun's Scythe", x: 13.5, y: 11.5, found: false, glyph: '⛏', color: '#e2e8f0' },
-      { id: 'battery', name: "Phone Powerbank", x: 7.5, y: 18.5, found: false, glyph: '🔋', color: '#4ade80' }
-    ];
-
-    /* ==========================================================================
-       5. FIRST-PERSON DDA RAYCASTING & ACCURATE SPRITE PROJECTION
-       ========================================================================== */
-    const canvas = document.getElementById('game-canvas');
-    const ctx = canvas.getContext('2d', { alpha: false });
-    let screenW = 0, screenH = 0;
-    let cols = 0, rows = 0;
-    let cellW = 0, cellH = 0;
-
-    let charBuffer = [];
-    let colorBuffer = [];
-    let zBuffer = [];
-
-    const ASCII_RAMP = " .'`,:;!~+*?#%&8@█";
-
-    function resizeDisplay() {
-      screenW = window.innerWidth;
-      screenH = window.innerHeight;
-      canvas.width = screenW;
-      canvas.height = screenH;
-
-      cols = Math.min(130, Math.max(70, Math.floor(screenW / 9.0)));
-      rows = Math.min(65, Math.max(36, Math.floor(screenH / 15.0)));
-
-      cellW = screenW / cols;
-      cellH = screenH / rows;
-
-      charBuffer = new Array(cols * rows);
-      colorBuffer = new Array(cols * rows);
-      zBuffer = new Float32Array(cols);
+    // 1. River / Moat (Y: 20 to 24)
+    if (y >= 20 && y <= 24) {
+      cell.floor = -0.9;
+      cell.mat = MAT_WATER;
     }
-    window.addEventListener('resize', resizeDisplay);
 
-    function getColorFromChar(code) {
-      switch(code) {
-        case 'w': return '#f8fafc'; // Wimple Stark White
-        case 'c': return '#94a3b8'; // Scythe Cyan/Silver
-        case 'Y': return '#facc15'; // Hollow Staring Eyes Yellow
-        case 'r': return '#ef4444'; // Rosary Red
-        case 'd': return '#0f172a'; // Dark Habit Black
-        default:  return '#cbd5e1';
+    // 2. Wooden Bridge spanning the River (X: 22 to 25, Y: 19 to 25)
+    if (x >= 22 && x <= 25 && y >= 19 && y <= 25) {
+      cell.floor = 0.3; // elevated above water
+      cell.roof = 999.0;
+      cell.mat = MAT_BRIDGE;
+    }
+
+    // 3. Dark Stone Stairs (X: 22 to 25, Y: 13 to 18)
+    // Floor increases step by step as we head North towards the castle gate
+    if (x >= 22 && x <= 25 && y >= 13 && y <= 18) {
+      const stepIndex = 18 - y; // 0 to 5
+      cell.floor = 0.3 + (stepIndex + 1) * 0.32; // climbs from 0.62 up to 2.22
+      cell.roof = 999.0;
+      cell.mat = MAT_STAIRS;
+    }
+
+    // 4. Stone Castle Wall (at Y = 11, spanning across the landscape)
+    if (y === 11) {
+      if (x >= 6 && x <= 41) {
+        cell.floor = 5.8; // tall impassable wall
+        cell.roof = 0.0;
+        cell.mat = MAT_CASTLE_WALL;
       }
     }
 
-    function renderRaycastView(time) {
-      const total = cols * rows;
-      for (let i = 0; i < total; i++) {
-        charBuffer[i] = ' ';
-        colorBuffer[i] = '#020204';
+    // Flanking Castle Towers
+    if ((x >= 18 && x <= 20 && y >= 9 && y <= 11) ||
+        (x >= 27 && x <= 29 && y >= 9 && y <= 11) ||
+        (x >= 6 && x <= 9 && y >= 9 && y <= 12) ||
+        (x >= 38 && x <= 41 && y >= 9 && y <= 12)) {
+      cell.floor = 7.5;
+      cell.roof = 0.0;
+      cell.mat = MAT_TOWER;
+    }
+
+    // 5. The Green Gate with Vaulted Arch Curve (X: 22 to 25, Y: 10 to 11)
+    if (x >= 22 && x <= 25 && (y === 11 || y === 10)) {
+      cell.floor = 2.22;  // level with top of stairs
+      cell.roof = 4.6;   // base vaulted ceiling height
+      cell.arch = 1.35;  // arch curve parameter: curves ceiling down at jambs
+      cell.archAxis = 'X';
+      cell.mat = (y === 11) ? MAT_GREEN_GATE : MAT_COURTYARD;
+    }
+
+    // Castle Interior Courtyard / Cloister (North of wall: Y <= 9)
+    if (y <= 9 && x >= 10 && x <= 37) {
+      cell.floor = 2.22;
+      cell.roof = 999.0;
+      cell.mat = MAT_COURTYARD;
+    }
+
+    mapGrid[idx] = cell;
+  }
+}
+
+// 6. Scatter Snowy Pine Trees throughout the southern forest and flanks
+const pineTrees = [
+  {x: 16, y: 32}, {x: 12, y: 35}, {x: 8, y: 28}, {x: 19, y: 36},
+  {x: 28, y: 33}, {x: 32, y: 36}, {x: 36, y: 30}, {x: 29, y: 28},
+  {x: 14, y: 27}, {x: 10, y: 40}, {x: 24, y: 40}, {x: 34, y: 42},
+  {x: 6, y: 34},  {x: 39, y: 35}, {x: 17, y: 43}, {x: 30, y: 44},
+  {x: 15, y: 17}, {x: 11, y: 16}, {x: 7, y: 15},  {x: 32, y: 17},
+  {x: 36, y: 15}, {x: 40, y: 16}, {x: 14, y: 22}, {x: 33, y: 22}
+];
+
+pineTrees.forEach(t => {
+  const c = getCell(t.x, t.y);
+  if (c.mat === MAT_SNOW) {
+    c.mat = MAT_PINE_TREE;
+  }
+});
+
+// ============================================================================
+// 3. FIRST-PERSON CAMERA & PHYSICS STATE
+// ============================================================================
+const player = {
+  x: 23.5,
+  y: 33.0,
+  z: 1.4,
+  vz: 0.0,
+  yaw: -Math.PI / 2, // Facing North (toward castle gate)
+  pitch: 0.06,       // Looking slightly up at the gate & moon
+  speed: 4.0,
+  onGround: true
+};
+
+const keys = {};
+window.addEventListener('keydown', e => {
+  keys[e.code] = true;
+  if (e.code === 'KeyH') {
+    const hud = document.getElementById('hud');
+    hud.style.display = (hud.style.display === 'none') ? 'flex' : 'none';
+  }
+});
+window.addEventListener('keyup', e => { keys[e.code] = false; });
+
+// Pointer Lock Look
+const canvas = document.getElementById('glcanvas');
+canvas.addEventListener('click', () => {
+  canvas.requestPointerLock();
+});
+document.addEventListener('pointerlockchange', () => {
+  const prompt = document.getElementById('click-prompt');
+  prompt.style.opacity = (document.pointerLockElement === canvas) ? '0' : '1';
+});
+document.addEventListener('mousemove', e => {
+  if (document.pointerLockElement === canvas) {
+    player.yaw += e.movementX * 0.0024;
+    player.pitch -= e.movementY * 0.0024;
+    player.pitch = Math.max(-0.75, Math.min(0.75, player.pitch));
+  }
+});
+
+// ============================================================================
+// 4. COLUMN-BASED RAYCASTER WITH ARCH PROJECTION
+// ============================================================================
+// Output buffer: COLS x ROWS pixels. Each pixel stores 4 bytes:
+// R = ASCII Character Code (32..126)
+// G = Red Component
+// B = Green Component
+// A = Blue Component
+const screenBuffer = new Uint8Array(COLS * ROWS * 4);
+
+function setScreenChar(col, row, asciiCode, r, g, b) {
+  if (col < 0 || col >= COLS || row < 0 || row >= ROWS) return;
+  const idx = (row * COLS + col) * 4;
+  screenBuffer[idx + 0] = asciiCode;
+  screenBuffer[idx + 1] = r;
+  screenBuffer[idx + 2] = g;
+  screenBuffer[idx + 3] = b;
+}
+
+// Deterministic noise for celestial stars and moon craters
+function hash2(x, y) {
+  const s = Math.sin(x * 127.1 + y * 311.7) * 43758.5453123;
+  return s - Math.floor(s);
+}
+
+// Celestial Moon direction vector in sky (North-West, 28° elevation)
+const MOON_YAW = -Math.PI * 0.65;
+const MOON_PITCH = 0.48;
+const MOON_DIR = [
+  Math.cos(MOON_PITCH) * Math.cos(MOON_YAW),
+  Math.cos(MOON_PITCH) * Math.sin(MOON_YAW),
+  Math.sin(MOON_PITCH)
+];
+
+function renderScene(timeSec) {
+  const focalLength = (COLS * 0.5) / Math.tan(FOV * 0.5);
+  const vFocalLength = focalLength * (ROWS / COLS) * 1.8; // Character aspect ratio compensation
+
+  // Cast one ray for each column of characters across the screen
+  for (let col = 0; col < COLS; col++) {
+    const screenX = col - COLS * 0.5;
+    const rayAngleRel = Math.atan2(screenX, focalLength);
+    const rayYaw = player.yaw + rayAngleRel;
+    const cosCorr = Math.cos(rayAngleRel); // Correct fisheye distortion
+
+    const rdx = Math.cos(rayYaw);
+    const rdy = Math.sin(rayYaw);
+
+    // Front-to-back occlusion spans for this column
+    let yCeil = 0;
+    let yFloor = ROWS - 1;
+
+    // Step through the heightmap along the column ray
+    let t = 0.25;
+    const maxDist = 38.0;
+    let hitSolid = false;
+    let prevFloorH = getCell(player.x, player.y).floor;
+
+    while (t < maxDist && !hitSolid && yCeil <= yFloor) {
+      const wx = player.x + rdx * t;
+      const wy = player.y + rdy * t;
+      const cell = getCell(wx, wy);
+
+      // Evaluate the cell's ARCH CURVE:
+      // Modulate roof height along the arch transverse axis
+      let effectiveRoof = cell.roof;
+      let archDrop = 0.0;
+      if (cell.arch > 0.0 && cell.roof < 900.0) {
+        // Transverse coordinate u in [0, 1] across the portal
+        const u = (cell.archAxis === 'X') ? (wx - Math.floor(wx)) : (wy - Math.floor(wy));
+        // Parabolic / circular arch crown equation
+        const archShape = Math.sqrt(Math.max(0.0, 1.0 - 4.0 * (u - 0.5) * (u - 0.5)));
+        archDrop = cell.arch * (1.0 - archShape);
+        effectiveRoof = cell.roof - archDrop;
       }
 
-      // 1. Raycast Walls
-      for (let c = 0; c < cols; c++) {
-        const cameraX = 2 * c / cols - 1;
-        const rayDirX = player.dirX + player.planeX * cameraX;
-        const rayDirY = player.dirY + player.planeY * cameraX;
+      const distCorr = t * cosCorr;
+      const horizon = ROWS * 0.5 + Math.tan(player.pitch) * vFocalLength;
 
-        let mapX = Math.floor(player.x);
-        let mapY = Math.floor(player.y);
+      // Project floor and roof heights to vertical screen rows
+      const projFloorY = Math.round(horizon - ((cell.floor - player.z) / distCorr) * vFocalLength);
+      const projRoofY  = (effectiveRoof >= 900.0)
+        ? -100
+        : Math.round(horizon - ((effectiveRoof - player.z) / distCorr) * vFocalLength);
 
-        const deltaDistX = Math.abs(1 / (rayDirX || 1e-6));
-        const deltaDistY = Math.abs(1 / (rayDirY || 1e-6));
+      // Distance fog / light attenuation
+      const fog = Math.max(0.15, Math.min(1.0, 1.0 - (t / maxDist)));
 
-        let stepX, stepY, sideDistX, sideDistY;
+      // ----------------------------------------------------------------------
+      // A. RENDER VISIBLE FLOOR SPAN (Bottom-Up)
+      // ----------------------------------------------------------------------
+      if (projFloorY < yFloor) {
+        const spanStart = Math.max(0, projFloorY);
+        for (let r = yFloor; r >= spanStart; r--) {
+          let charCode = 46; // '.'
+          let cr = 180, cg = 200, cb = 220;
 
-        if (rayDirX < 0) {
-          stepX = -1; sideDistX = (player.x - mapX) * deltaDistX;
-        } else {
-          stepX = 1; sideDistX = (mapX + 1.0 - player.x) * deltaDistX;
-        }
-        if (rayDirY < 0) {
-          stepY = -1; sideDistY = (player.y - mapY) * deltaDistY;
-        } else {
-          stepY = 1; sideDistY = (mapY + 1.0 - player.y) * deltaDistY;
-        }
-
-        let hit = 0, side = 0, tileType = 1;
-
-        while (hit === 0) {
-          if (sideDistX < sideDistY) {
-            sideDistX += deltaDistX; mapX += stepX; side = 0;
+          if (cell.mat === MAT_WATER) {
+            // Animated rippling water with moonlight reflections
+            const wave = Math.sin(wx * 2.5 + timeSec * 3.5) * Math.cos(wy * 2.5 + timeSec * 2.8);
+            if (wave > 0.3) {
+              charCode = 126; // '~'
+              cr = 70; cg = 160; cb = 240;
+            } else if (wave > -0.2) {
+              charCode = 94;  // '^'
+              cr = 40; cg = 110; cb = 190;
+            } else {
+              charCode = 61;  // '='
+              cr = 20; cg = 60;  cb = 130;
+            }
+          } else if (cell.mat === MAT_BRIDGE) {
+            // Wooden bridge planks and timber grain
+            const plank = Math.floor(wy * 3.0) % 2;
+            charCode = (plank === 0) ? 61 : 35; // '=' or '#'
+            cr = 160; cg = 110; cb = 75;
+          } else if (cell.mat === MAT_STAIRS) {
+            // Dark stone stairs with moonlit tread edges
+            const stepEdge = Math.floor(wy * 2.5) % 2;
+            charCode = (stepEdge === 0) ? 61 : 45; // '=' or '-'
+            cr = 95; cg = 105; cb = 120;
+          } else if (cell.mat === MAT_COURTYARD) {
+            // Castle courtyard stone paving
+            charCode = ((Math.floor(wx) + Math.floor(wy)) % 2 === 0) ? 43 : 46; // '+' or '.'
+            cr = 110; cg = 125; cb = 140;
           } else {
-            sideDistY += deltaDistY; mapY += stepY; side = 1;
+            // Snowy terrain with sparkling ice crystals
+            const snowHash = hash2(Math.floor(wx * 4.0), Math.floor(wy * 4.0));
+            if (snowHash > 0.85) charCode = 42; // '*'
+            else if (snowHash > 0.5) charCode = 46; // '.'
+            else charCode = 39; // '\''
+            cr = 210; cg = 225; cb = 245;
           }
-          if (mapX >= 0 && mapX < MAP_W && mapY >= 0 && mapY < MAP_H) {
-            const tile = MAP[mapY * MAP_W + mapX];
-            if (tile > 0) { hit = 1; tileType = tile; }
-          } else { hit = 1; }
+
+          setScreenChar(col, r, charCode, Math.floor(cr * fog), Math.floor(cg * fog), Math.floor(cb * fog));
         }
-
-        let perpWallDist;
-        if (side === 0) perpWallDist = (mapX - player.x + (1 - stepX) / 2) / rayDirX;
-        else perpWallDist = (mapY - player.y + (1 - stepY) / 2) / rayDirY;
-
-        zBuffer[c] = perpWallDist;
-
-        const lineHeight = Math.floor(rows / (perpWallDist || 0.01));
-        const drawStart = Math.max(0, Math.floor(-lineHeight / 2 + rows / 2));
-        const drawEnd = Math.min(rows - 1, Math.floor(lineHeight / 2 + rows / 2));
-
-        let light = 0.07;
-        if (player.flashlightOn && player.battery > 0) {
-          const cone = Math.max(0, 1.0 - Math.abs(cameraX) * 0.95);
-          light += (cone * 1.55) / (1.0 + perpWallDist * 0.35);
-        }
-        if (side === 1) light *= 0.72;
-
-        let [r, g, b] = [120, 120, 130];
-        let wallGlyph = '#';
-
-        if (tileType === 2) {
-          [r, g, b] = [140, 95, 55]; wallGlyph = (c % 2 === 0) ? 'E' : '|';
-        } else if (tileType === 3) {
-          [r, g, b] = [160, 40, 40]; wallGlyph = '†'; // Desecrated Chapel Inverted Cross
-        } else if (tileType === 4) {
-          [r, g, b] = [180, 175, 160]; wallGlyph = '%'; // Ossuary Bones
-        } else if (tileType === 5) {
-          [r, g, b] = [110, 30, 60]; wallGlyph = '§';
-        } else if (tileType === 6) {
-          [r, g, b] = [210, 180, 50]; wallGlyph = '▓'; // Grand Exit Gate
-        } else if (tileType === 7) {
-          [r, g, b] = [30, 180, 80]; wallGlyph = '~'; // Spectral Pit
-        } else if (tileType === 8) {
-          [r, g, b] = [200, 20, 20]; wallGlyph = '≈'; // Blood Fountain
-        }
-
-        r = Math.min(255, Math.floor(r * light));
-        g = Math.min(255, Math.floor(g * light));
-        b = Math.min(255, Math.floor(b * light));
-
-        const lum = (0.299 * r + 0.587 * g + 0.114 * b) / 255.0;
-        let glyphIdx = Math.floor(lum * ASCII_RAMP.length);
-        glyphIdx = Math.max(0, Math.min(ASCII_RAMP.length - 1, glyphIdx));
-
-        const char = lum > 0.4 ? wallGlyph : ASCII_RAMP[glyphIdx];
-        const hexColor = `rgb(${r},${g},${b})`;
-
-        for (let y = drawStart; y <= drawEnd; y++) {
-          const idx = y * cols + c;
-          charBuffer[idx] = char;
-          colorBuffer[idx] = hexColor;
-        }
-
-        // Floor & Arched Ceiling
-        for (let y = drawEnd + 1; y < rows; y++) {
-          const currentDist = rows / (2.0 * y - rows);
-          let floorLight = 0.05;
-          if (player.flashlightOn && player.battery > 0) {
-            floorLight += 0.85 / (1.0 + currentDist * 0.45);
-          }
-          const flrIdx = y * cols + c;
-          const flrR = Math.floor(35 * floorLight);
-          const flrG = Math.floor(38 * floorLight);
-          const flrB = Math.floor(45 * floorLight);
-          charBuffer[flrIdx] = (flrR > 18) ? '.' : ' ';
-          colorBuffer[flrIdx] = `rgb(${flrR},${flrG},${flrB})`;
-        }
+        yFloor = spanStart - 1;
       }
 
-      // 2. Render Billboard Character Sprites (Exact Reference Matrices)
-      const sprites = [];
-      relics.forEach(r => {
-        if (!r.found) sprites.push({ x: r.x, y: r.y, type: 'relic', data: r });
-      });
-      sprites.push({ x: felix.x, y: felix.y, type: 'felix' });
-      sprites.push({ x: valak.x, y: valak.y, type: 'valak' });
+      // ----------------------------------------------------------------------
+      // B. RENDER VISIBLE ROOF / ARCH SPAN (Top-Down)
+      // ----------------------------------------------------------------------
+      if (projRoofY > yCeil && cell.roof < 900.0) {
+        const spanEnd = Math.min(ROWS - 1, projRoofY);
+        for (let r = yCeil; r <= spanEnd; r++) {
+          let charCode = 35; // '#'
+          let cr = 100, cg = 110, cb = 130;
 
-      sprites.forEach(sp => {
-        sp.dist = Math.hypot(player.x - sp.x, player.y - sp.y);
-      });
-      sprites.sort((a, b) => b.dist - a.dist);
-
-      sprites.forEach(sp => {
-        if (sp.dist < 0.2) return;
-
-        const spriteX = sp.x - player.x;
-        const spriteY = sp.y - player.y;
-
-        const invDet = 1.0 / (player.planeX * player.dirY - player.dirX * player.planeY);
-        const transformX = invDet * (player.dirY * spriteX - player.dirX * spriteY);
-        const transformY = invDet * (-player.planeY * spriteX + player.planeX * spriteY);
-
-        if (transformY <= 0.2) return;
-
-        const spriteScreenX = Math.floor((cols / 2) * (1 + transformX / transformY));
-        const spriteH = Math.abs(Math.floor(rows / transformY));
-        const spriteW = Math.abs(Math.floor(rows / transformY));
-
-        const drawStartY = Math.max(0, Math.floor(-spriteH / 2 + rows / 2));
-        const drawEndY = Math.min(rows - 1, Math.floor(spriteH / 2 + rows / 2));
-        const drawStartX = Math.max(0, Math.floor(-spriteW / 2 + spriteScreenX));
-        const drawEndX = Math.min(cols - 1, Math.floor(spriteW / 2 + spriteScreenX));
-
-        if (sp.type === 'valak') {
-          // Render Valak using VALAK_MATRIX
-          const mRows = VALAK_MATRIX.length;
-          const mCols = VALAK_MATRIX[0].length;
-
-          for (let stripe = drawStartX; stripe <= drawEndX; stripe++) {
-            if (transformY > 0 && transformY < zBuffer[stripe]) {
-              const u = Math.floor((stripe - drawStartX) / (drawEndX - drawStartX + 1) * mCols);
-              for (let y = drawStartY; y <= drawEndY; y++) {
-                const v = Math.floor((y - drawStartY) / (drawEndY - drawStartY + 1) * mRows);
-                const ch = VALAK_MATRIX[v][u];
-                if (ch && ch !== ' ') {
-                  const idx = y * cols + stripe;
-                  charBuffer[idx] = ch;
-                  colorBuffer[idx] = getColorFromChar(VALAK_COLORS[v][u]);
-                }
-              }
-            }
+          if (cell.arch > 0.0) {
+            // Vaulted arch ceiling keystones and voussoirs
+            charCode = (archDrop > 0.6) ? 37 : 61; // '%' or '='
+            cr = 120; cg = 135; cb = 160;
           }
-        } else if (sp.type === 'felix') {
-          // Render Felix using FELIX_MATRIX
-          const mRows = FELIX_MATRIX.length;
-          const mCols = FELIX_MATRIX[0].length;
 
-          for (let stripe = drawStartX; stripe <= drawEndX; stripe++) {
-            if (transformY > 0 && transformY < zBuffer[stripe]) {
-              const u = Math.floor((stripe - drawStartX) / (drawEndX - drawStartX + 1) * mCols);
-              for (let y = drawStartY; y <= drawEndY; y++) {
-                const v = Math.floor((y - drawStartY) / (drawEndY - drawStartY + 1) * mRows);
-                const ch = FELIX_MATRIX[v][u];
-                if (ch && ch !== ' ') {
-                  const idx = y * cols + stripe;
-                  charBuffer[idx] = ch;
-                  colorBuffer[idx] = (FELIX_COLORS[v][u] === 'Y') ? '#facc15' : '#38bdf8';
-                }
-              }
-            }
-          }
-        } else if (sp.type === 'relic') {
-          for (let stripe = drawStartX; stripe <= drawEndX; stripe++) {
-            if (transformY > 0 && transformY < zBuffer[stripe]) {
-              for (let y = drawStartY; y <= drawEndY; y++) {
-                const idx = y * cols + stripe;
-                charBuffer[idx] = sp.data.glyph;
-                colorBuffer[idx] = sp.data.color;
-              }
-            }
-          }
+          setScreenChar(col, r, charCode, Math.floor(cr * fog), Math.floor(cg * fog), Math.floor(cb * fog));
         }
-      });
+        yCeil = spanEnd + 1;
+      }
 
-      // 3. Render USER-1 First-Person Hand & Phone Viewmodel
-      const vmRows = HAND_PHONE_VIEWMODEL.length;
-      const vmCols = HAND_PHONE_VIEWMODEL[0].length;
-      const bobY = Math.floor(Math.sin(player.bobPhase) * 2.0);
-
-      const vmStartX = cols - vmCols - 2;
-      const vmStartY = rows - vmRows - 1 + bobY;
-
-      for (let vr = 0; vr < vmRows; vr++) {
-        for (let vc = 0; vc < vmCols; vc++) {
-          const ch = HAND_PHONE_VIEWMODEL[vr][vc];
-          const targetX = vmStartX + vc;
-          const targetY = vmStartY + vr;
-
-          if (ch !== ' ' && targetX >= 0 && targetX < cols && targetY >= 0 && targetY < rows) {
-            const idx = targetY * cols + targetX;
-            charBuffer[idx] = ch;
-            // Phone screen illuminates with golden/cyan light
-            if (ch === '☼') colorBuffer[idx] = '#fef08a';
-            else if (ch === 'O' || ch === '*') colorBuffer[idx] = '#38bdf8';
-            else colorBuffer[idx] = '#e2e8f0';
-          }
+      // ----------------------------------------------------------------------
+      // C. RENDER WALLS, GATES, STAIR RISERS, AND PINE TREES
+      // ----------------------------------------------------------------------
+      // 1. Step risers: vertical difference between ascending stairs/terrain
+      if (cell.floor > prevFloorH + 0.15 && t > 0.6) {
+        const prevProjY = Math.round(horizon - ((prevFloorH - player.z) / distCorr) * vFocalLength);
+        const rTop = Math.max(yCeil, Math.min(yFloor, projFloorY));
+        const rBot = Math.max(yCeil, Math.min(yFloor, prevProjY));
+        for (let r = rTop; r <= rBot; r++) {
+          setScreenChar(col, r, 35, Math.floor(60 * fog), Math.floor(65 * fog), Math.floor(75 * fog)); // Dark stone '#'
         }
       }
-    }
+      prevFloorH = cell.floor;
 
-    /* ==========================================================================
-       6. FAST BATCHED TEXT CANVAS PIPELINE
-       ========================================================================== */
-    function renderBufferToScreen() {
-      ctx.fillStyle = '#020204';
-      ctx.fillRect(0, 0, screenW, screenH);
+      // 2. Solid Castle Wall, Towers, or Green Gate
+      if (cell.mat === MAT_CASTLE_WALL || cell.mat === MAT_TOWER || cell.mat === MAT_GREEN_GATE) {
+        const rWallTop = Math.max(yCeil, Math.min(ROWS - 1, (cell.roof < 900.0 ? projRoofY : 0)));
+        const rWallBot = Math.min(yFloor, Math.max(0, projFloorY));
 
-      const fontSize = Math.floor(cellH * 0.95);
-      ctx.font = `${fontSize}px monospace`;
-      ctx.textBaseline = 'top';
+        for (let r = rWallTop; r <= rWallBot; r++) {
+          let charCode = 35; // '#'
+          let cr = 90, cg = 100, cb = 115;
 
-      for (let r = 0; r < rows; r++) {
-        const rowOffset = r * cols;
-        const yPos = r * cellH;
-
-        let curColor = '';
-        let batch = '';
-        let startCol = 0;
-
-        for (let c = 0; c < cols; c++) {
-          const idx = rowOffset + c;
-          const char = charBuffer[idx] || ' ';
-          const color = colorBuffer[idx] || '#020204';
-
-          if (color === curColor) {
-            batch += char;
+          if (cell.mat === MAT_GREEN_GATE) {
+            // Green Castle Gate with iron-studded portcullis bars
+            const bar = Math.floor(wx * 6.0) % 2;
+            const hinge = Math.floor(r * 0.3) % 2;
+            if (hinge === 0) {
+              charCode = 43; // '+' Iron hinge
+              cr = 45; cg = 55; cb = 50;
+            } else {
+              charCode = (bar === 0) ? 124 : 35; // '|' or '#'
+              cr = 38; cg = 145; cb = 65; // Mossy dark green
+            }
+          } else if (cell.mat === MAT_TOWER) {
+            // Crenellated battlements
+            charCode = ((Math.floor(wx * 2.0) + r) % 3 === 0) ? 72 : 37; // 'H' or '%'
+            cr = 110; cg = 120; cb = 140;
           } else {
-            if (batch.length > 0 && curColor !== '#020204') {
-              ctx.fillStyle = curColor;
-              ctx.fillText(batch, startCol * cellW, yPos);
+            // Castle stone masonry
+            const brick = (Math.floor(wx * 2.0) + Math.floor(r * 0.5)) % 2;
+            charCode = (brick === 0) ? 35 : 66; // '#' or 'B'
+            cr = 85; cg = 95; cb = 110;
+          }
+
+          setScreenChar(col, r, charCode, Math.floor(cr * fog), Math.floor(cg * fog), Math.floor(cb * fog));
+        }
+
+        if (cell.mat === MAT_CASTLE_WALL || cell.mat === MAT_TOWER || cell.mat === MAT_GREEN_GATE) {
+          hitSolid = true;
+          break;
+        }
+      }
+
+      // 3. Snowy Pine Trees (Conical Evergreen Needle Silhouettes)
+      if (cell.mat === MAT_PINE_TREE) {
+        const treeCX = Math.floor(wx) + 0.5;
+        const treeCY = Math.floor(wy) + 0.5;
+        const dTree = Math.hypot(wx - treeCX, wy - treeCY);
+        if (dTree < 0.38) {
+          const treeH = 3.6;
+          const rTreeTop = Math.round(horizon - ((cell.floor + treeH - player.z) / distCorr) * vFocalLength);
+          const rTreeBot = Math.min(yFloor, Math.max(0, projFloorY));
+          const rTreeStart = Math.max(yCeil, Math.min(ROWS - 1, rTreeTop));
+
+          for (let r = rTreeStart; r <= rTreeBot; r++) {
+            const relH = (r - rTreeStart) / Math.max(1, rTreeBot - rTreeStart);
+            let charCode = 94; // '^'
+            let cr = 30, cg = 110, cb = 45;
+
+            // Snow-dusted upper boughs
+            if (relH < 0.35) {
+              charCode = 42; // '*'
+              cr = 210; cg = 230; cb = 245; // Pure snow white
+            } else if (relH > 0.88) {
+              charCode = 124; // '|' Pine trunk
+              cr = 100; cg = 70; cb = 45;
+            } else {
+              charCode = (relH < 0.6) ? 94 : 35; // '^' or '#'
+              cr = 25; cg = 95; cb = 40;
             }
-            curColor = color;
-            batch = char;
-            startCol = c;
+
+            setScreenChar(col, r, charCode, Math.floor(cr * fog), Math.floor(cg * fog), Math.floor(cb * fog));
           }
         }
-
-        if (batch.length > 0 && curColor !== '#020204') {
-          ctx.fillStyle = curColor;
-          ctx.fillText(batch, startCol * cellW, yPos);
-        }
       }
+
+      t += (t < 10.0) ? 0.08 : 0.16;
     }
 
-    /* ==========================================================================
-       7. SUSPENSE AI, CHAT & INTERACTION
-       ========================================================================== */
-    const chatBox = document.getElementById('chat-box');
-    const selfieArt = document.getElementById('selfie-art');
-    const panicVignette = document.getElementById('panic-vignette');
-    const glitchOverlay = document.getElementById('glitch-overlay');
-    const hudBpm = document.getElementById('hud-bpm');
-    const hudBattery = document.getElementById('hud-battery');
-    const promptEl = document.getElementById('interaction-prompt');
+    // ------------------------------------------------------------------------
+    // D. RENDER STARRY NIGHT SKY & FULL MOON (Remaining Unoccluded Rows)
+    // ------------------------------------------------------------------------
+    for (let r = yCeil; r <= yFloor; r++) {
+      // Reconstruct the 3D ray direction for this background sky pixel
+      const screenY = (ROWS * 0.5 + Math.tan(player.pitch) * vFocalLength) - r;
+      const rayPitch = Math.atan2(screenY, vFocalLength);
 
-    const CHAT_USERS = ["BloggerFan99", "GhostHunter", "X_DarkSoul_X", "PixelWanderer", "SpookyVibes", "NunWatcher", "UrbanExKing"];
-    const CHAT_MESSAGES = [
-      "POG streamer is actually inside Castle Valak!!",
-      "Wait bro... did you hear that door slam???",
-      "LOOK AT THE END OF THE HALLWAY",
-      "TURN YOUR FLASHLIGHT OFF SHE SEES YOU!!",
-      "IS THAT A NUN WITH A SCYTHE WHAT THE HECK",
-      "YOOOO Felix the ghost cat is there!! Follow him!",
-      "Find the Archivist Key in the library quick!!",
-      "Your heart rate is 140 BPM calm down bro!!",
-      "RUN SHE IS RIGHT BEHIND YOU"
-    ];
+      const rDirX = Math.cos(rayPitch) * Math.cos(rayYaw);
+      const rDirY = Math.cos(rayPitch) * Math.sin(rayYaw);
+      const rDirZ = Math.sin(rayPitch);
 
-    function addChatMessage(user, text, isWarn = false) {
-      const msg = document.createElement('div');
-      msg.className = 'chat-msg';
-      msg.innerHTML = `<span class="${isWarn ? 'chat-warn' : 'chat-user'}">${user}:</span> ${text}`;
-      chatBox.appendChild(msg);
-      if (chatBox.children.length > 5) chatBox.removeChild(chatBox.children[0]);
-    }
+      // Dot product with Moon direction
+      const dotMoon = rDirX * MOON_DIR[0] + rDirY * MOON_DIR[1] + rDirZ * MOON_DIR[2];
+      const angDist = Math.acos(Math.max(-1.0, Math.min(1.0, dotMoon)));
 
-    let chatTimer = 0;
-    let heartbeatTimer = 0;
+      if (angDist < 0.075) {
+        // FULL MOON SURFACE: Detailed craters and glowing lunar maria
+        const mx = rDirX * 35.0;
+        const my = rDirZ * 35.0;
+        const crater = Math.sin(mx * 5.0) * Math.cos(my * 5.0) + Math.sin(mx * 2.3);
 
-    function updateHorrorAI(dt) {
-      const distToValak = Math.hypot(player.x - valak.x, player.y - valak.y);
+        let charCode = 64; // '@'
+        let cr = 255, cg = 255, cb = 240;
 
-      // Heartbeat & Panic Pulse
-      if (distToValak < 7.5) {
-        player.bpm = Math.min(170, Math.floor(170 - distToValak * 11));
-        glitchOverlay.style.opacity = `${(7.5 - distToValak) / 7.5 * 0.85}`;
-        panicVignette.style.boxShadow = `inset 0 0 ${Math.floor(80 + (8 - distToValak) * 15)}px rgba(220, 38, 38, 0.65)`;
-      } else {
-        player.bpm = Math.max(74, player.bpm - Math.floor(dt * 10));
-        glitchOverlay.style.opacity = '0';
-        panicVignette.style.boxShadow = 'inset 0 0 0px rgba(220, 38, 38, 0)';
-      }
-
-      hudBpm.textContent = `💓 ${player.bpm} BPM`;
-      selfieArt.textContent = getUser1SelfieArt(player.bpm);
-
-      // Heartbeat Audio Sound
-      heartbeatTimer += dt;
-      if (heartbeatTimer >= 60.0 / player.bpm) {
-        heartbeatTimer = 0;
-        playSound('heartbeat');
-      }
-
-      // Valak Stalker Navigation
-      if (distToValak < 12.0 && player.flashlightOn) valak.chasing = true;
-
-      if (valak.chasing || distToValak < 6.0) {
-        const dx = player.x - valak.x;
-        const dy = player.y - valak.y;
-        const dist = Math.hypot(dx, dy);
-
-        if (dist > 0.8) {
-          const vx = (dx / dist) * valak.speed * dt;
-          const vy = (dy / dist) * valak.speed * dt;
-          const nvx = valak.x + vx;
-          const nvy = valak.y + vy;
-          if (MAP[Math.floor(nvy) * MAP_W + Math.floor(nvx)] === 0) {
-            valak.x = nvx;
-            valak.y = nvy;
-          }
+        if (crater > 0.5) {
+          charCode = 64; // '@'
+          cr = 255; cg = 255; cb = 245;
+        } else if (crater > 0.0) {
+          charCode = 37; // '%'
+          cr = 235; cg = 235; cb = 220;
+        } else if (crater > -0.5) {
+          charCode = 79; // 'O'
+          cr = 195; cg = 205; cb = 210;
         } else {
-          triggerGameOver(false);
+          charCode = 48; // '0' Dark lunar mare
+          cr = 160; cg = 175; cb = 185;
         }
-      }
 
-      // Felix Phantom Guidance
-      felix.hintTimer += dt;
-      if (felix.hintTimer > 10.0) {
-        felix.hintTimer = 0;
-        playSound('cat-purr');
-        addChatMessage("Felix (Cat)", "*mrrp* *guides toward dark corridor*", true);
-      }
+        setScreenChar(col, r, charCode, cr, cg, cb);
+      } else if (angDist < 0.18) {
+        // MOONLIGHT HALO & CORONA
+        const haloT = (0.18 - angDist) / (0.18 - 0.075);
+        let charCode = 46; // '.'
+        let cr = 90, cg = 130, cb = 180;
 
-      // Battery Drain
-      if (player.flashlightOn && player.battery > 0) {
-        player.battery = Math.max(0, player.battery - dt * 0.45);
-        hudBattery.textContent = `🔋 ${Math.floor(player.battery)}%`;
-        if (player.battery === 0) player.flashlightOn = false;
-      }
+        if (haloT > 0.6) {
+          charCode = 42; // '*'
+          cr = 160; cg = 200; cb = 240;
+        } else if (haloT > 0.3) {
+          charCode = 43; // '+'
+          cr = 120; cg = 160; cb = 210;
+        }
 
-      // Environmental Hazards (Spectral Pits DoT)
-      const currentTile = MAP[Math.floor(player.y) * MAP_W + Math.floor(player.x)];
-      if (currentTile === 7) {
-        player.bpm = 180;
-        panicVignette.style.boxShadow = `inset 0 0 100px rgba(34, 197, 94, 0.75)`;
-      }
-
-      // Prompt Check
-      let nearItem = null;
-      relics.forEach(r => {
-        if (!r.found && Math.hypot(player.x - r.x, player.y - r.y) < 1.4) nearItem = r;
-      });
-
-      const distToGate = Math.hypot(player.x - 13.5, player.y - 25.0);
-      if (distToGate < 2.0) {
-        const canEscape = player.relics.key && player.relics.chalice && player.relics.scythe;
-        promptEl.style.display = 'block';
-        promptEl.textContent = canEscape ? '[E] UNLOCK MAIN GATE & ESCAPE!' : 'GATE LOCKED BY 3 UNHOLY SEALS';
-      } else if (nearItem) {
-        promptEl.style.display = 'block';
-        promptEl.textContent = `[E] PICK UP ${nearItem.name.toUpperCase()}`;
+        setScreenChar(col, r, charCode, Math.floor(cr * haloT), Math.floor(cg * haloT), Math.floor(cb * haloT));
       } else {
-        promptEl.style.display = 'none';
-      }
+        // STARRY NIGHT SKY: Twinkling celestial stars and midnight atmosphere
+        const starSeed = hash2(Math.floor(rDirX * 180.0), Math.floor(rDirZ * 180.0 + rDirY * 60.0));
+        let charCode = 32; // ' '
+        let cr = 4, cg = 8, cb = 20; // Deep midnight sky base
 
-      // Live Chat Tick
-      chatTimer += dt;
-      if (chatTimer > 4.5) {
-        chatTimer = 0;
-        const u = CHAT_USERS[Math.floor(Math.random() * CHAT_USERS.length)];
-        const m = CHAT_MESSAGES[Math.floor(Math.random() * CHAT_MESSAGES.length)];
-        addChatMessage(u, m);
-      }
-    }
-
-    /* ==========================================================================
-       8. CONTROLS, INPUT & PHYSICS
-       ========================================================================== */
-    function interact() {
-      initAudio();
-      relics.forEach(r => {
-        if (!r.found && Math.hypot(player.x - r.x, player.y - r.y) < 1.5) {
-          r.found = true;
-          playSound('pickup');
-          if (r.id === 'battery') {
-            player.battery = 100;
-            addChatMessage("STREAM", "+100% PHONE CHARGE RECOVERED!");
+        if (starSeed > 0.985 && rDirZ > 0.01) {
+          // Twinkling bright star
+          const twinkle = Math.sin(timeSec * 3.5 + starSeed * 100.0);
+          if (twinkle > 0.3) {
+            charCode = 42; // '*'
+            cr = 240; cg = 245; cb = 255;
           } else {
-            player.relics[r.id] = true;
-            document.getElementById(`relic-${r.id === 'key' ? 1 : (r.id === 'chalice' ? 2 : 3)}`).className = 'relic-item relic-found';
-            addChatMessage("STREAM", `COLLECTED SACRED ARTIFACT: ${r.name.toUpperCase()}!`, true);
+            charCode = 43; // '+'
+            cr = 170; cg = 190; cb = 230;
           }
-          checkAllRelics();
+        } else if (starSeed > 0.965 && rDirZ > 0.0) {
+          charCode = 46; // '.' Dim distant star
+          cr = 110; cg = 130; cb = 170;
         }
-      });
 
-      if (Math.hypot(player.x - 13.5, player.y - 25.0) < 2.0) {
-        if (player.relics.key && player.relics.chalice && player.relics.scythe) {
-          triggerGameOver(true);
-        }
+        setScreenChar(col, r, charCode, cr, cg, cb);
       }
     }
+  }
+}
 
-    function checkAllRelics() {
-      let count = 0;
-      if (player.relics.key) count++;
-      if (player.relics.chalice) count++;
-      if (player.relics.scythe) count++;
-      document.getElementById('relic-gate').textContent = `GATE: ${count === 3 ? 'UNLOCKED' : `LOCKED [${3 - count}/3 Left]`}`;
+// ============================================================================
+// 5. WEBGL GPU STAMPER PIPELINE (1 DRAW CALL)
+// ============================================================================
+const gl = canvas.getContext('webgl', { antialias: false, depth: false });
+if (!gl) alert('WebGL not supported');
+
+// Procedurally generate a crisp 256x256 monochrome font texture atlas in JS
+function createFontAtlasTexture() {
+  const fontCanvas = document.createElement('canvas');
+  fontCanvas.width = 256;
+  fontCanvas.height = 256;
+  const ctx = fontCanvas.getContext('2d');
+
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(0, 0, 256, 256);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 15px "Courier New", monospace';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+
+  // 16x16 grid of characters (all 256 standard codes)
+  const cellW = 16;
+  const cellH = 16;
+  for (let i = 0; i < 256; i++) {
+    const cx = (i % 16) * cellW + cellW * 0.5;
+    const cy = Math.floor(i / 16) * cellH + cellH * 0.5;
+    if (i >= 32 && i <= 126) {
+      ctx.fillText(String.fromCharCode(i), cx, cy);
     }
+  }
 
-    function toggleFlashlight() {
-      initAudio();
-      if (player.battery > 0) {
-        player.flashlightOn = !player.flashlightOn;
-        addChatMessage("STREAM", player.flashlightOn ? "Flashlight ON" : "Flashlight OFF (Stealth)");
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, fontCanvas);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return tex;
+}
+
+// Create dynamic screen buffer texture (COLS x ROWS)
+function createScreenTexture() {
+  const tex = gl.createTexture();
+  gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, COLS, ROWS, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  return tex;
+}
+
+// Vertex Shader: Fullscreen rendering quad
+const vsSource = `
+  attribute vec2 a_position;
+  varying vec2 v_uv;
+  void main() {
+    v_uv = vec2((a_position.x + 1.0) * 0.5, (1.0 - a_position.y) * 0.5);
+    gl_Position = vec4(a_position, 0.0, 1.0);
+  }
+`;
+
+// Fragment Shader: Samples screen buffer and stamps the corresponding ASCII glyph
+const fsSource = `
+  precision mediump float;
+  varying vec2 v_uv;
+  uniform sampler2D u_screenTex;
+  uniform sampler2D u_fontTex;
+  uniform vec2 u_gridSize;
+  uniform vec2 u_resolution;
+
+  void main() {
+    // Locate the current character cell on the screen grid
+    vec2 cellCoord = floor(v_uv * u_gridSize);
+    vec2 charUV    = fract(v_uv * u_gridSize);
+
+    // Fetch character ASCII code and RGB color from the screen buffer texture
+    vec2 screenCoord = (cellCoord + 0.5) / u_gridSize;
+    vec4 charData = texture2D(u_screenTex, screenCoord);
+
+    float charCode = floor(charData.r * 255.0 + 0.5);
+    vec3 fgColor   = charData.gba;
+
+    // Locate glyph in the 16x16 font atlas
+    float gx = mod(charCode, 16.0);
+    float gy = floor(charCode / 16.0);
+    vec2 fontUV = (vec2(gx, gy) + charUV) / 16.0;
+
+    float glyphMask = texture2D(u_fontTex, fontUV).r;
+
+    // CRT phosphor scanline & subtle edge vignette
+    float scanline = 0.90 + 0.10 * sin(v_uv.y * u_resolution.y * 3.14159);
+    vec2 vigUV = v_uv * (1.0 - v_uv.yx);
+    float vignette = clamp(vigUV.x * vigUV.y * 30.0, 0.0, 1.0);
+    vignette = pow(vignette, 0.22);
+
+    vec3 terminalBlack = vec3(0.012, 0.025, 0.05);
+    vec3 finalColor = mix(terminalBlack, fgColor, glyphMask) * scanline * vignette;
+
+    gl_FragColor = vec4(finalColor, 1.0);
+  }
+`;
+
+function compileShader(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src);
+  gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) {
+    console.error(gl.getShaderInfoLog(s));
+  }
+  return s;
+}
+
+const program = gl.createProgram();
+gl.attachShader(program, compileShader(gl.VERTEX_SHADER, vsSource));
+gl.attachShader(program, compileShader(gl.FRAGMENT_SHADER, fsSource));
+gl.linkProgram(program);
+gl.useProgram(program);
+
+// Fullscreen Quad Geometry
+const quadBuffer = gl.createBuffer();
+gl.bindBuffer(gl.ARRAY_BUFFER, quadBuffer);
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+  -1, -1,
+   1, -1,
+  -1,  1,
+   1,  1
+]), gl.STATIC_DRAW);
+
+const posAttr = gl.getAttribLocation(program, 'a_position');
+gl.enableVertexAttribArray(posAttr);
+gl.vertexAttribPointer(posAttr, 2, gl.FLOAT, false, 0, 0);
+
+const uScreenTexLoc = gl.getUniformLocation(program, 'u_screenTex');
+const uFontTexLoc   = gl.getUniformLocation(program, 'u_fontTex');
+const uGridSizeLoc  = gl.getUniformLocation(program, 'u_gridSize');
+const uResolutionLoc= gl.getUniformLocation(program, 'u_resolution');
+
+const fontAtlasTex = createFontAtlasTexture();
+const screenTex    = createScreenTexture();
+
+// ============================================================================
+// 6. PLAYER PHYSICS & GAME LOOP
+// ============================================================================
+function updatePlayer(dt) {
+  // Keyboard turning (Arrows)
+  if (keys['ArrowLeft'])  player.yaw -= 2.0 * dt;
+  if (keys['ArrowRight']) player.yaw += 2.0 * dt;
+  if (keys['ArrowUp'])    player.pitch = Math.min(0.75, player.pitch + 1.5 * dt);
+  if (keys['ArrowDown'])  player.pitch = Math.max(-0.75, player.pitch - 1.5 * dt);
+
+  // Movement vectors
+  let moveX = 0;
+  let moveY = 0;
+  if (keys['KeyW']) { moveX += Math.cos(player.yaw); moveY += Math.sin(player.yaw); }
+  if (keys['KeyS']) { moveX -= Math.cos(player.yaw); moveY -= Math.sin(player.yaw); }
+  if (keys['KeyA']) { moveX += Math.sin(player.yaw); moveY -= Math.cos(player.yaw); }
+  if (keys['KeyD']) { moveX -= Math.sin(player.yaw); moveY += Math.cos(player.yaw); }
+
+  const len = Math.hypot(moveX, moveY);
+  if (len > 0.001) {
+    const sprint = keys['ShiftLeft'] ? 1.7 : 1.0;
+    const spd = player.speed * sprint * dt;
+    const nx = player.x + (moveX / len) * spd;
+    const ny = player.y + (moveY / len) * spd;
+
+    // Boundary & Wall Collision Detection
+    const targetCell = getCell(nx, ny);
+    if (targetCell.mat !== MAT_CASTLE_WALL && targetCell.mat !== MAT_TOWER) {
+      // Step climbing limit (cannot walk straight up sheer cliffs)
+      if (targetCell.floor <= player.z + 0.6) {
+        player.x = nx;
+        player.y = ny;
       }
     }
+  }
 
-    const keys = {};
-    window.addEventListener('keydown', (e) => {
-      initAudio();
-      keys[e.code] = true;
-      if (e.code === 'KeyF') toggleFlashlight();
-      if (e.code === 'KeyE' || e.code === 'Space') interact();
-      if (e.code === 'ShiftLeft') player.sprinting = true;
-    });
-    window.addEventListener('keyup', (e) => {
-      keys[e.code] = false;
-      if (e.code === 'ShiftLeft') player.sprinting = false;
-    });
+  // Vertical Gravity & Smooth Ground Snapping
+  const curCell = getCell(player.x, player.y);
+  const targetZ = curCell.floor + 1.35; // Eye height
 
-    document.querySelectorAll('.touch-btn').forEach(b => {
-      const code = b.getAttribute('data-k');
-      b.addEventListener('pointerdown', (e) => {
-        e.preventDefault(); e.stopPropagation();
-        initAudio();
-        if (code) keys[code] = true;
-      });
-      b.addEventListener('pointerup', (e) => {
-        e.preventDefault(); e.stopPropagation();
-        if (code) keys[code] = false;
-      });
-      b.addEventListener('pointercancel', (e) => {
-        if (code) keys[code] = false;
-      });
-    });
+  if (keys['Space'] && player.onGround) {
+    player.vz = 4.2;
+    player.onGround = false;
+  }
 
-    document.getElementById('btn-interact').addEventListener('pointerdown', (e) => { e.preventDefault(); interact(); });
-    document.getElementById('btn-light').addEventListener('pointerdown', (e) => { e.preventDefault(); toggleFlashlight(); });
-    document.getElementById('btn-sprint').addEventListener('pointerdown', (e) => {
-      e.preventDefault();
-      player.sprinting = !player.sprinting;
-      document.getElementById('btn-sprint').classList.toggle('active', player.sprinting);
-    });
+  player.z += player.vz * dt;
+  player.vz -= 9.8 * dt; // Gravity
 
-    let touchStartX = 0;
-    canvas.addEventListener('pointerdown', (e) => {
-      initAudio();
-      touchStartX = e.clientX;
-    });
-    canvas.addEventListener('pointermove', (e) => {
-      if (e.buttons > 0 || e.pointerType === 'touch') {
-        const dx = e.clientX - touchStartX;
-        rotatePlayer(dx * 0.005);
-        touchStartX = e.clientX;
-      }
-    });
+  if (player.z <= targetZ) {
+    player.z = targetZ;
+    player.vz = 0;
+    player.onGround = true;
+  } else {
+    player.onGround = false;
+  }
+}
 
-    function rotatePlayer(angle) {
-      const oldDirX = player.dirX;
-      player.dirX = player.dirX * Math.cos(angle) - player.dirY * Math.sin(angle);
-      player.dirY = oldDirX * Math.sin(angle) + player.dirY * Math.cos(angle);
+// Tactical ASCII Minimap Update
+function updateHUD() {
+  document.getElementById('pos-display').textContent =
+    `${player.x.toFixed(1)}, ${player.y.toFixed(1)}, ${player.z.toFixed(1)}`;
 
-      const oldPlaneX = player.planeX;
-      player.planeX = player.planeX * Math.cos(angle) - player.planeY * Math.sin(angle);
-      player.planeY = oldPlaneX * Math.sin(angle) + player.planeY * Math.cos(angle);
-    }
+  let deg = Math.round((player.yaw * 180 / Math.PI) % 360);
+  if (deg < 0) deg += 360;
+  const dirs = ['E', 'SE', 'S', 'SW', 'W', 'NW', 'N', 'NE'];
+  const dname = dirs[Math.round(deg / 45) % 8];
+  document.getElementById('compass-display').textContent = `${dname} [${deg}°]`;
 
-    function updatePlayerPhysics(dt) {
-      let moveStep = (player.sprinting ? player.speed * 1.6 : player.speed) * dt;
+  const curCell = getCell(player.x, player.y);
+  const names = {
+    [MAT_SNOW]: 'SNOWY FOREST',
+    [MAT_WATER]: 'RIVER MOAT',
+    [MAT_BRIDGE]: 'WOODEN BRIDGE',
+    [MAT_STAIRS]: 'DARK STONE STAIRS',
+    [MAT_CASTLE_WALL]: 'CASTLE WALL',
+    [MAT_GREEN_GATE]: 'THE GREEN GATE',
+    [MAT_COURTYARD]: 'CASTLE COURTYARD',
+    [MAT_PINE_TREE]: 'PINE FOREST',
+    [MAT_TOWER]: 'CASTLE BASTION'
+  };
+  document.getElementById('sector-display').textContent = names[curCell.mat] || 'UNKNOWN';
+  document.getElementById('cell-stats').textContent =
+    `F: ${curCell.floor.toFixed(1)} | R: ${curCell.roof > 900 ? 'SKY' : curCell.roof.toFixed(1)} | A: ${curCell.arch.toFixed(1)}`;
 
-      if (keys['KeyQ'] || keys['ArrowLeft']) rotatePlayer(-player.rotSpeed * dt);
-      if (keys['KeyE'] || keys['ArrowRight']) rotatePlayer(player.rotSpeed * dt);
+  // Generate 21x11 ASCII tactical scan centered on player
+  let miniStr = '';
+  const rangeX = 10;
+  const rangeY = 5;
+  const px = Math.floor(player.x);
+  const py = Math.floor(player.y);
 
-      let dx = 0, dy = 0;
-      if (keys['KeyW'] || keys['ArrowUp']) { dx += player.dirX; dy += player.dirY; }
-      if (keys['KeyS'] || keys['ArrowDown']) { dx -= player.dirX; dy -= player.dirY; }
-      if (keys['KeyA']) { dx -= player.planeX; dy -= player.planeY; }
-      if (keys['KeyD']) { dx += player.planeX; dy += player.planeY; }
-
-      const len = Math.hypot(dx, dy);
-      if (len > 0) {
-        dx = (dx / len) * moveStep;
-        dy = (dy / len) * moveStep;
-
-        const newX = player.x + dx;
-        const newY = player.y + dy;
-
-        if (MAP[Math.floor(player.y) * MAP_W + Math.floor(newX)] === 0) player.x = newX;
-        if (MAP[Math.floor(newY) * MAP_W + Math.floor(player.x)] === 0) player.y = newY;
-
-        player.bobPhase += dt * 10.0;
-        if (Math.random() < 0.12) playSound('footstep');
-      }
-    }
-
-    /* ==========================================================================
-       9. JUMPSCARE & GAME OVER
-       ========================================================================== */
-    const modal = document.getElementById('modal');
-    const modalTitle = document.getElementById('modal-title');
-    const modalDesc = document.getElementById('modal-desc');
-    const jumpscareFace = document.getElementById('jumpscare-face');
-
-    function triggerGameOver(won) {
-      player.isAlive = false;
-      modal.style.display = 'flex';
-      if (won) {
-        playSound('pickup');
-        jumpscareFace.textContent = "";
-        modalTitle.textContent = "ESCAPED CASTLE VALAK!";
-        modalTitle.style.color = "#4ade80";
-        modalDesc.textContent = "You unlocked the Grand Gate and survived the Unholy Vows with your livestream footage intact! 500,000+ Viewers watched you escape!";
+  for (let my = py - rangeY; my <= py + rangeY; my++) {
+    for (let mx = px - rangeX; mx <= px + rangeX; mx++) {
+      if (mx === px && my === py) {
+        miniStr += '@'; // Player marker
       } else {
-        playSound('screech');
-        // Render Valak's close-up ASCII face jumpscare from reference sheet
-        jumpscareFace.textContent = [
-          "       .---.       ",
-          "      / ... \\      ",
-          "     / [O O] \\     ",
-          "    |  : === : |    ",
-          "     \\ '---' /     ",
-          "   .--'--†--'--.   ",
-          "  /  *   |   *  \\  ",
-          " /   *   †   *   \\ "
-        ].join("\n");
-        modalTitle.textContent = "VALAK REAPED YOUR SOUL";
-        modalTitle.style.color = "#ef4444";
-        modalDesc.textContent = "The Unholy Nun reaped your soul with her spectral scythe. The livestream went dark...";
+        const c = getCell(mx, my);
+        if (c.mat === MAT_GREEN_GATE) miniStr += 'G';
+        else if (c.mat === MAT_CASTLE_WALL || c.mat === MAT_TOWER) miniStr += '#';
+        else if (c.mat === MAT_STAIRS) miniStr += '=';
+        else if (c.mat === MAT_BRIDGE) miniStr += '|';
+        else if (c.mat === MAT_WATER) miniStr += '~';
+        else if (c.mat === MAT_PINE_TREE) miniStr += '^';
+        else miniStr += '.';
       }
     }
+    miniStr += '\n';
+  }
+  document.getElementById('minimap').textContent = miniStr;
+}
 
-    function restartGame() {
-      location.reload();
-    }
+// Window Resize Handling
+function resizeCanvas() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  canvas.width = w * dpr;
+  canvas.height = h * dpr;
+  gl.viewport(0, 0, canvas.width, canvas.height);
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
 
-    /* ==========================================================================
-       10. MAIN ENGINE LOOP
-       ========================================================================== */
-    let lastTime = performance.now();
+// ============================================================================
+// 7. MAIN RENDER LOOP (ONE GPU DRAW CALL PER FRAME)
+// ============================================================================
+let lastTime = performance.now();
 
-    function gameLoop(now) {
-      const dt = Math.min((now - lastTime) / 1000.0, 0.1);
-      lastTime = now;
+function frame(now) {
+  const dt = Math.min(0.08, (now - lastTime) * 0.001);
+  lastTime = now;
 
-      if (player.isAlive) {
-        updatePlayerPhysics(dt);
-        updateHorrorAI(dt);
-      }
+  // 1. Update Game Simulation & Player Controls
+  updatePlayer(dt);
 
-      renderRaycastView(now * 0.001);
-      renderBufferToScreen();
+  // 2. Cast one ray per column in JavaScript to resolve visibility & ASCII symbols
+  renderScene(now * 0.001);
 
-      requestAnimationFrame(gameLoop);
-    }
+  // 3. Upload screen character buffer texture to GPU
+  gl.activeTexture(gl.TEXTURE0);
+  gl.bindTexture(gl.TEXTURE_2D, screenTex);
+  gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, 0, COLS, ROWS, gl.RGBA, gl.UNSIGNED_BYTE, screenBuffer);
 
-    resizeDisplay();
-    addChatMessage("SYSTEM", "Stream started in Castle Valak. Find 3 seals to unlock the Grand Gate.");
-    requestAnimationFrame(gameLoop);
-  </script>
+  gl.activeTexture(gl.TEXTURE1);
+  gl.bindTexture(gl.TEXTURE_2D, fontAtlasTex);
+
+  gl.uniform1i(uScreenTexLoc, 0);
+  gl.uniform1i(uFontTexLoc, 1);
+  gl.uniform2f(uGridSizeLoc, COLS, ROWS);
+  gl.uniform2f(uResolutionLoc, canvas.width, canvas.height);
+
+  // 4. Stamp all ASCII characters onto the canvas in EXACTLY ONE GPU DRAW CALL
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+  // 5. Update HUD telemetry
+  updateHUD();
+
+  requestAnimationFrame(frame);
+}
+
+requestAnimationFrame(frame);
+</script>
 </body>
 </html>
