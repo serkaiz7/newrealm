@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>ASCII Voxel Craft // Sandbox World</title>
+  <title>ASCII Voxel World 1024 // Panoramic Sandbox</title>
   <style>
     * {
       box-sizing: border-box;
@@ -20,7 +20,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #050711;
+      background-color: #03050c;
       touch-action: none;
       position: fixed;
       font-family: 'Courier New', Courier, monospace;
@@ -33,170 +33,226 @@
       touch-action: none;
     }
 
-    /* Minimalist Tactical HUD */
+    /* Top HUD */
     #hud {
       position: absolute;
-      top: 10px;
-      left: 12px;
-      right: 12px;
-      display: flex;
-      justify-content: space-between;
-      color: #9cb3d9;
+      top: 8px;
+      left: 10px;
+      color: #93c5fd;
       font-size: 11px;
       font-weight: bold;
       pointer-events: none;
       text-shadow: 1px 1px 3px #000;
-      z-index: 10;
+      z-index: 15;
+      line-height: 1.4;
+    }
+
+    /* Mini-Radar Overlay */
+    #minimap-card {
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      background: rgba(3, 7, 18, 0.78);
+      border: 1px solid rgba(147, 197, 253, 0.3);
+      padding: 5px 8px;
+      border-radius: 6px;
+      color: #38bdf8;
+      font-size: 9px;
+      font-family: monospace;
+      line-height: 1.05;
+      white-space: pre;
+      pointer-events: none;
+      z-index: 15;
+      text-shadow: 0 0 2px #000;
     }
 
     #target-info {
       position: absolute;
-      top: 32px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: #e2e8f0;
-      background: rgba(15, 23, 42, 0.65);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      padding: 3px 10px;
+      top: 36px;
+      left: 10px;
+      color: #fde047;
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(253, 224, 71, 0.25);
+      padding: 3px 8px;
       border-radius: 4px;
       font-size: 10px;
-      letter-spacing: 0.5px;
       pointer-events: none;
-      text-align: center;
-      z-index: 10;
+      z-index: 15;
     }
 
-    /* Reticle / Crosshair */
+    /* Reticle */
     #reticle {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: rgba(255, 255, 255, 0.7);
-      font-size: 16px;
+      color: rgba(255, 255, 255, 0.85);
+      font-size: 18px;
       pointer-events: none;
-      z-index: 9;
+      z-index: 10;
       line-height: 1;
     }
 
-    /* Mobile Interaction Buttons */
-    .action-btn {
+    /* ==========================================================================
+       NAVIGATION & ACTION BUTTON CLUSTERS (Mobile First)
+       ========================================================================== */
+    .nav-btn {
+      width: 46px;
+      height: 46px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 1.5px solid rgba(255, 255, 255, 0.28);
+      border-radius: 8px;
+      color: #f8fafc;
+      font-size: 15px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      touch-action: none;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.45);
+      transition: background 0.1s, transform 0.05s;
+    }
+    .nav-btn:active, .nav-btn.active {
+      background: rgba(56, 189, 248, 0.45);
+      border-color: #38bdf8;
+      transform: scale(0.92);
+    }
+
+    /* Movement D-Pad (Bottom-Left) */
+    #dpad-cluster {
       position: absolute;
-      width: 68px;
-      height: 68px;
-      border-radius: 50%;
+      bottom: 68px;
+      left: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 46px);
+      grid-template-rows: repeat(3, 46px);
+      gap: 5px;
+      z-index: 25;
+    }
+
+    /* Camera Pan & Tilt Cluster (Bottom-Right) */
+    #camera-cluster {
+      position: absolute;
+      bottom: 126px;
+      right: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, 44px);
+      grid-template-rows: repeat(2, 44px);
+      gap: 5px;
+      z-index: 25;
+    }
+
+    /* Action Buttons (Mine / Build / Jump) */
+    #action-cluster {
+      position: absolute;
+      bottom: 68px;
+      right: 12px;
+      display: flex;
+      gap: 7px;
+      z-index: 25;
+    }
+    .action-btn {
+      width: 58px;
+      height: 48px;
+      border-radius: 8px;
+      font-size: 10px;
+      font-weight: bold;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      font-size: 10px;
-      font-weight: bold;
-      color: #fff;
-      border: 2px solid rgba(255, 255, 255, 0.35);
-      backdrop-filter: blur(4px);
-      z-index: 20;
-      touch-action: manipulation;
+      touch-action: none;
       cursor: pointer;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.5);
     }
     .action-btn:active {
-      transform: scale(0.92);
-      filter: brightness(1.2);
+      transform: scale(0.93);
     }
-    #btn-mine {
-      bottom: 96px;
-      right: 20px;
-      background: rgba(220, 38, 38, 0.55);
-      border-color: #ef4444;
-    }
-    #btn-build {
-      bottom: 96px;
-      right: 98px;
-      background: rgba(16, 185, 129, 0.55);
-      border-color: #10b981;
-    }
-    #btn-jump {
-      bottom: 174px;
-      right: 58px;
-      width: 52px;
-      height: 52px;
-      background: rgba(59, 130, 246, 0.55);
-      border-color: #3b82f6;
-    }
-    .btn-icon {
-      font-size: 16px;
-      margin-bottom: 2px;
-    }
+    #btn-mine { background: rgba(220, 38, 38, 0.65); border-color: #ef4444; }
+    #btn-build { background: rgba(16, 185, 129, 0.65); border-color: #10b981; }
+    #btn-jump { background: rgba(37, 99, 235, 0.65); border-color: #3b82f6; }
 
-    /* Minecraft-Style Block Hotbar */
+    /* Hotbar (Bottom Center) */
     #hotbar {
       position: absolute;
-      bottom: 14px;
+      bottom: 10px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 6px;
-      background: rgba(15, 23, 42, 0.75);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 5px;
+      gap: 5px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      padding: 4px;
       border-radius: 8px;
-      z-index: 20;
+      z-index: 25;
     }
-
     .hotbar-slot {
-      width: 44px;
-      height: 48px;
+      width: 42px;
+      height: 44px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
       background: rgba(255, 255, 255, 0.05);
       border: 2px solid transparent;
-      border-radius: 4px;
+      border-radius: 5px;
       color: #cbd5e1;
-      font-size: 9px;
+      font-size: 8px;
       cursor: pointer;
       touch-action: manipulation;
     }
     .hotbar-slot.active {
       border-color: #facc15;
-      background: rgba(250, 204, 21, 0.18);
+      background: rgba(250, 204, 21, 0.2);
       color: #fff;
     }
     .hotbar-char {
       font-size: 14px;
-      margin-bottom: 2px;
+      margin-bottom: 1px;
       font-weight: bold;
-    }
-
-    #controls-hint {
-      position: absolute;
-      bottom: 74px;
-      left: 50%;
-      transform: translateX(-50%);
-      color: rgba(255, 255, 255, 0.45);
-      font-size: 10px;
-      text-align: center;
-      pointer-events: none;
-      white-space: nowrap;
-      transition: opacity 2s ease-out;
     }
   </style>
 </head>
 <body>
+  <!-- HUD & Realtime Minimap -->
   <div id="hud">
-    <div id="hud-left">VOXEL-CRAFT // FPS: --</div>
-    <div id="hud-center">BIOME: HIGHLAND PLAINS</div>
-    <div id="hud-right">POS: (0, 0) | ALT: 0m</div>
+    <div id="hud-stats">WORLD 1024 // FPS: --</div>
+    <div id="hud-pos">POS: (0, 0) | ALT: 0m</div>
   </div>
-
+  <div id="minimap-card">RADAR
+[ + ]</div>
   <div id="target-info">TARGET: NONE</div>
   <div id="reticle">+</div>
 
-  <!-- Mobile Controls -->
-  <div id="btn-jump" class="action-btn"><span class="btn-icon">▲</span>JUMP</div>
-  <div id="btn-build" class="action-btn"><span class="btn-icon">🧱</span>BUILD</div>
-  <div id="btn-mine" class="action-btn"><span class="btn-icon">⛏</span>MINE</div>
+  <!-- Directional Navigation Cluster (Left) -->
+  <div id="dpad-cluster">
+    <div></div>
+    <div class="nav-btn" data-key="Forward" title="Forward">▲</div>
+    <div></div>
+    <div class="nav-btn" data-key="StrafeLeft" title="Strafe Left">◀</div>
+    <div class="nav-btn" data-key="Backward" title="Backward">▼</div>
+    <div class="nav-btn" data-key="StrafeRight" title="Strafe Right">▶</div>
+  </div>
+
+  <!-- Camera Turn/Tilt Cluster (Right Above Actions) -->
+  <div id="camera-cluster">
+    <div class="nav-btn" data-key="LookUp" title="Look Up">⤒</div>
+    <div></div>
+    <div class="nav-btn" data-key="LookDown" title="Look Down">⤓</div>
+    <div class="nav-btn" data-key="TurnLeft" title="Turn Left">↶</div>
+    <div></div>
+    <div class="nav-btn" data-key="TurnRight" title="Turn Right">↷</div>
+  </div>
+
+  <!-- Action Cluster (Bottom Right) -->
+  <div id="action-cluster">
+    <div id="btn-jump" class="action-btn"><span>▲</span>JUMP</div>
+    <div id="btn-mine" class="action-btn"><span>⛏</span>MINE</div>
+    <div id="btn-build" class="action-btn"><span>🧱</span>BUILD</div>
+  </div>
 
   <!-- Hotbar -->
   <div id="hotbar">
@@ -208,21 +264,20 @@
     <div class="hotbar-slot" data-mat="7"><span class="hotbar-char" style="color:#fde047">☼</span>LIGHT<span style="font-size:7px">[6]</span></div>
   </div>
 
-  <div id="controls-hint">DESKTOP: WASD to Move, Left-Click Mine, Right-Click / Space Build, 1-6 Hotbar</div>
   <canvas id="game-canvas"></canvas>
 
   <script>
     /* ==========================================================================
-       1. CONSTANTS & VOXEL MATERIAL REGISTRY
+       1. EXPANDED WORLD (1024x1024) & PANORAMIC FOV CONSTANTS
        ========================================================================== */
-    const MAP_SIZE = 512;
-    const MAP_MASK = MAP_SIZE - 1;
-    const WATER_LEVEL = 28.0;
-    const FOV = 1.15;
-    const MAX_RAY_DIST = 260.0;
-    const REACH_DISTANCE = 16.0;
+    const MAP_SIZE = 1024;            // 1,048,576 voxels
+    const MAP_MASK = MAP_SIZE - 1;    // Bitwise mask for seamless world wrapping
+    const WATER_LEVEL = 30.0;
+    const WIDE_FOV = 1.48;            // ~85° Ultra-wide panoramic lens
+    const MAX_RAY_DIST = 320.0;       // Extended view horizon
+    const REACH_DISTANCE = 18.0;
 
-    // Voxel Material IDs
+    // Material IDs
     const MAT_WATER = 0;
     const MAT_DIRT  = 1;
     const MAT_GRASS = 2;
@@ -234,25 +289,23 @@
     const MAT_SAND  = 8;
     const MAT_SNOW  = 9;
 
-    // Material definitions: names, visual glyph palettes, and base RGB tones
     const MATERIALS = {
-      [MAT_WATER]: { name: "Water",       base: [28, 85, 175],  glyphs: ['~', '≈', '-'] },
-      [MAT_DIRT]:  { name: "Dirt",        base: [130, 88, 52],  glyphs: ['.', ':', '%'] },
-      [MAT_GRASS]: { name: "Grass Block", base: [48, 142, 54],  glyphs: ['w', 'v', ',', '.'] },
-      [MAT_STONE]: { name: "Cobblestone", base: [120, 124, 134],glyphs: ['#', '%', '&'] },
-      [MAT_WOOD]:  { name: "Wood Planks", base: [160, 108, 62], glyphs: ['=', '|', 'H'] },
-      [MAT_LEAF]:  { name: "Foliage",     base: [34, 148, 48],  glyphs: ['*', '@', '%'] },
-      [MAT_BRICK]: { name: "Stone Brick", base: [180, 72, 58],  glyphs: ['■', '[', ']'] },
-      [MAT_LIGHT]: { name: "Glowstone",   base: [255, 215, 60], glyphs: ['☼', '*', '+'] },
-      [MAT_SAND]:  { name: "Sand",        base: [195, 175, 110],glyphs: [':', '.', '°'] },
-      [MAT_SNOW]:  { name: "Snow Cap",    base: [230, 238, 250],glyphs: ['█', '▓', '▒'] },
+      [MAT_WATER]: { name: "Water",       base: [24, 82, 172],  glyphs: ['~', '≈', '-'] },
+      [MAT_DIRT]:  { name: "Dirt",        base: [125, 84, 48],  glyphs: ['.', ':', '%'] },
+      [MAT_GRASS]: { name: "Grass",       base: [42, 138, 50],  glyphs: ['w', 'v', ',', '.'] },
+      [MAT_STONE]: { name: "Stone",       base: [115, 120, 130],glyphs: ['#', '%', '&'] },
+      [MAT_WOOD]:  { name: "Wood Planks", base: [155, 104, 58], glyphs: ['=', '|', 'H'] },
+      [MAT_LEAF]:  { name: "Leaves",      base: [30, 142, 45],  glyphs: ['*', '@', '%'] },
+      [MAT_BRICK]: { name: "Brick",       base: [175, 68, 55],  glyphs: ['■', '[', ']'] },
+      [MAT_LIGHT]: { name: "Glowstone",   base: [255, 215, 55], glyphs: ['☼', '*', '+'] },
+      [MAT_SAND]:  { name: "Sand",        base: [192, 172, 108],glyphs: [':', '.', '°'] },
+      [MAT_SNOW]:  { name: "Snow Cap",    base: [225, 235, 248],glyphs: ['█', '▓', '▒'] },
     };
 
-    // Sun directional vector
-    const SUN_DIR = normalizeVector({ x: -0.58, y: -0.62, z: 0.52 });
+    const SUN_DIR = normalizeVector({ x: -0.58, y: -0.60, z: 0.55 });
 
     /* ==========================================================================
-       2. CANVAS, STATE & BUFFERS
+       2. CANVAS & TEXT BUFFER PIPELINE
        ========================================================================== */
     const canvas = document.getElementById('game-canvas');
     const ctx = canvas.getContext('2d', { alpha: false });
@@ -263,25 +316,23 @@
     let charBuffer = [];
     let colorBuffer = [];
 
-    // Player state with physics
     const player = {
-      x: 256.0,
-      y: 256.0,
+      x: 512.0,
+      y: 512.0,
       z: 60.0,
-      targetZ: 60.0,
       vz: 0.0,
       yaw: 0.0,
       pitch: 0.0,
-      speed: 38.0,
+      speed: 40.0,
       eyeHeight: 5.5,
       isGrounded: true
     };
 
     let selectedMat = MAT_STONE;
-    let currentTarget = null; // Coordinates of block targeted by crosshair
+    let currentTarget = null;
 
     /* ==========================================================================
-       3. PROCEDURAL TERRAIN, TREES & RUINS GENERATION
+       3. PROCEDURAL CONTINENTS, FORESTS, SHRINES & RUINS
        ========================================================================== */
     const heightMap   = new Float32Array(MAP_SIZE * MAP_SIZE);
     const materialMap = new Uint8Array(MAP_SIZE * MAP_SIZE);
@@ -298,10 +349,8 @@
       for (let i = 0; i < 256; i++) p[256 + i] = p[i];
 
       return function(x, y) {
-        const xi = Math.floor(x) & 255;
-        const yi = Math.floor(y) & 255;
-        const xf = x - Math.floor(x);
-        const yf = y - Math.floor(y);
+        const xi = Math.floor(x) & 255, yi = Math.floor(y) & 255;
+        const xf = x - Math.floor(x),   yf = y - Math.floor(y);
         const u = xf * xf * xf * (xf * (xf * 6.0 - 15.0) + 10.0);
         const v = yf * yf * yf * (yf * (yf * 6.0 - 15.0) + 10.0);
 
@@ -310,7 +359,7 @@
           return ((h & 1) ? -gx : gx) + ((h & 2) ? -gy : gy);
         }
 
-        const a1 = p[p[xi] + yi], a2 = p[p[xi] + yi + 1];
+        const a1 = p[p[xi] + yi],     a2 = p[p[xi] + yi + 1];
         const b1 = p[p[xi + 1] + yi], b2 = p[p[xi + 1] + yi + 1];
 
         const x1 = grad(a1, xf, yf) * (1.0 - u) + grad(b1, xf - 1.0, yf) * u;
@@ -319,34 +368,34 @@
       };
     }
 
-    function generateDetailedWorld() {
-      const noise = createNoise2D(909);
+    function generate1024World() {
+      const noise = createNoise2D(888);
 
-      // Phase 1: Multi-octave base elevation & geological biome assignment
+      // Phase 1: Mega-scale continental elevation & multi-octave geology
       for (let y = 0; y < MAP_SIZE; y++) {
         const row = y * MAP_SIZE;
         for (let x = 0; x < MAP_SIZE; x++) {
           let h = 0;
-          h += noise(x * 0.004, y * 0.004) * 88.0;
-          h += noise(x * 0.012, y * 0.012) * 36.0;
-          h += noise(x * 0.035, y * 0.035) * 14.0;
-          h += noise(x * 0.080, y * 0.080) * 4.0;
+          h += noise(x * 0.002, y * 0.002) * 95.0;  // Continental shelves
+          h += noise(x * 0.006, y * 0.006) * 44.0;  // Mountain ranges
+          h += noise(x * 0.018, y * 0.018) * 18.0;  // Foothills
+          h += noise(x * 0.050, y * 0.050) * 5.0;   // Surface boulders
           h += 50.0;
 
-          if (h > 72.0) {
-            h += Math.pow((h - 72.0) * 0.04, 2.2) * 38.0;
+          if (h > 78.0) {
+            h += Math.pow((h - 78.0) * 0.038, 2.3) * 42.0; // Steep alpine peaks
           }
+
           const idx = row + x;
           heightMap[idx] = Math.max(0, h);
 
-          // Assign surface material based on altitude and environment
           if (h < WATER_LEVEL) {
             materialMap[idx] = MAT_WATER;
-          } else if (h < WATER_LEVEL + 4.5) {
+          } else if (h < WATER_LEVEL + 4.0) {
             materialMap[idx] = MAT_SAND;
-          } else if (h < 76.0) {
+          } else if (h < 82.0) {
             materialMap[idx] = MAT_GRASS;
-          } else if (h < 118.0) {
+          } else if (h < 125.0) {
             materialMap[idx] = MAT_STONE;
           } else {
             materialMap[idx] = MAT_SNOW;
@@ -354,30 +403,27 @@
         }
       }
 
-      // Phase 2: Procedural Tree Distribution (Forests & Groves)
-      for (let cy = 16; cy < MAP_SIZE - 16; cy += 12) {
-        for (let cx = 16; cx < MAP_SIZE - 16; cx += 12) {
-          const jx = (cx + (Math.sin(cy * 4.2) * 5.0 + 6.0)) | 0;
-          const jy = (cy + (Math.cos(cx * 3.7) * 5.0 + 6.0)) | 0;
+      // Phase 2: Massive Forest Biomes across 1024 grid
+      for (let cy = 32; cy < MAP_SIZE - 32; cy += 14) {
+        for (let cx = 32; cx < MAP_SIZE - 32; cx += 14) {
+          const jx = (cx + (Math.sin(cy * 4.3) * 5.5 + 6.0)) | 0;
+          const jy = (cy + (Math.cos(cx * 3.9) * 5.5 + 6.0)) | 0;
           const baseH = heightMap[jy * MAP_SIZE + jx];
 
-          // Plant trees only on fertile grass slopes
-          if (baseH > WATER_LEVEL + 5.0 && baseH < 74.0) {
-            const trunkHeight = 5.0 + (Math.sin(jx * 7.1) * 2.0);
-            // Erect wood trunk
-            heightMap[jy * MAP_SIZE + jx] += trunkHeight;
+          if (baseH > WATER_LEVEL + 4.5 && baseH < 80.0) {
+            const trunkH = 5.5 + (Math.sin(jx * 8.3) * 2.5);
+            heightMap[jy * MAP_SIZE + jx] += trunkH;
             materialMap[jy * MAP_SIZE + jx] = MAT_WOOD;
 
-            // Canopy foliage cluster
             for (let dy = -2; dy <= 2; dy++) {
               for (let dx = -2; dx <= 2; dx++) {
                 if (dx === 0 && dy === 0) continue;
                 const dist = Math.hypot(dx, dy);
-                if (dist <= 2.2) {
+                if (dist <= 2.3) {
                   const tx = (jx + dx) & MAP_MASK;
                   const ty = (jy + dy) & MAP_MASK;
                   const tidx = ty * MAP_SIZE + tx;
-                  heightMap[tidx] += trunkHeight * (0.65 - dist * 0.15);
+                  heightMap[tidx] += trunkH * (0.65 - dist * 0.15);
                   materialMap[tidx] = MAT_LEAF;
                 }
               }
@@ -386,14 +432,15 @@
         }
       }
 
-      // Phase 3: Ancient Stone Brick Ruins & High Dungeons
-      const ruins = [
-        { x: 190, y: 180, r: 8, wallH: 9 },
-        { x: 320, y: 220, r: 10, wallH: 12 },
-        { x: 260, y: 340, r: 7, wallH: 8 }
+      // Phase 3: Distributed Fortresses & Ancient Temples across continents
+      const landmarks = [
+        { x: 380, y: 360, r: 10, wallH: 10 },
+        { x: 680, y: 440, r: 12, wallH: 12 },
+        { x: 512, y: 720, r: 9,  wallH: 9  },
+        { x: 260, y: 760, r: 11, wallH: 11 }
       ];
 
-      ruins.forEach(ruin => {
+      landmarks.forEach(ruin => {
         const floorH = heightMap[ruin.y * MAP_SIZE + ruin.x];
         for (let dy = -ruin.r; dy <= ruin.r; dy++) {
           for (let dx = -ruin.r; dx <= ruin.r; dx++) {
@@ -403,33 +450,30 @@
             const ridx = ry * MAP_SIZE + rx;
 
             if (Math.abs(dist - ruin.r) < 1.4) {
-              // Outer fortress battlement wall with periodic crenellations
               const crenel = ((dx + dy) & 1) === 0 ? 2.0 : 0.0;
               heightMap[ridx] = floorH + ruin.wallH + crenel;
               materialMap[ridx] = MAT_BRICK;
             } else if (dist < ruin.r) {
-              // Level courtyard pavement
               heightMap[ridx] = floorH + 0.5;
               materialMap[ridx] = MAT_STONE;
             }
           }
         }
-        // Center glowstone beacon
+        // Center Beacon Tower
         const cidx = ruin.y * MAP_SIZE + ruin.x;
-        heightMap[cidx] = floorH + ruin.wallH + 3.0;
+        heightMap[cidx] = floorH + ruin.wallH + 4.0;
         materialMap[cidx] = MAT_LIGHT;
       });
 
-      // Find a safe scenic spawn on open grassland
-      for (let y = 140; y < 380; y += 4) {
-        for (let x = 140; x < 380; x += 4) {
+      // Find highland meadow spawn
+      for (let y = 400; y < 650; y += 4) {
+        for (let x = 400; x < 650; x += 4) {
           const h = heightMap[y * MAP_SIZE + x];
           const mat = materialMap[y * MAP_SIZE + x];
-          if (mat === MAT_GRASS && h > WATER_LEVEL + 8.0) {
+          if (mat === MAT_GRASS && h > WATER_LEVEL + 6.0 && h < 75.0) {
             player.x = x;
             player.y = y;
             player.z = h + player.eyeHeight;
-            player.targetZ = player.z;
             return;
           }
         }
@@ -437,9 +481,7 @@
     }
 
     function sampleTerrain(x, y) {
-      const ix = Math.floor(x) & MAP_MASK;
-      const iy = Math.floor(y) & MAP_MASK;
-      return heightMap[iy * MAP_SIZE + ix];
+      return heightMap[(Math.floor(y) & MAP_MASK) * MAP_SIZE + (Math.floor(x) & MAP_MASK)];
     }
 
     function normalizeVector(v) {
@@ -448,11 +490,11 @@
     }
 
     /* ==========================================================================
-       4. DYNAMIC LIGHTING & NORMAL CALCULATION
+       4. DYNAMIC SLOPE LIGHTING ENGINE
        ========================================================================== */
     function computeLighting(mx, my, isWater, mat) {
       if (isWater) return 0.88;
-      if (mat === MAT_LIGHT) return 1.5; // Emissive light source
+      if (mat === MAT_LIGHT) return 1.6;
 
       const x = mx & MAP_MASK;
       const y = my & MAP_MASK;
@@ -464,18 +506,14 @@
 
       const dx = (hR - hL) * 0.5;
       const dy = (hD - hU) * 0.5;
-
       const len = Math.hypot(dx, dy, 1.0);
-      const nx = -dx / len;
-      const ny = -dy / len;
-      const nz = 1.0 / len;
 
-      const dot = nx * SUN_DIR.x + ny * SUN_DIR.y + nz * SUN_DIR.z;
+      const dot = (-dx / len) * SUN_DIR.x + (-dy / len) * SUN_DIR.y + (1.0 / len) * SUN_DIR.z;
       return Math.max(0.18, Math.min(1.0, dot * 0.65 + 0.45));
     }
 
     /* ==========================================================================
-       5. VOXEL RAYCASTING ENGINE & TARGETING
+       5. PANORAMIC VOXEL RAYCASTER & TARGETING
        ========================================================================== */
     function getVoxelVisual(h, d, maxD, light, mat, isWater, animTime, isTargeted) {
       const fog = Math.min(1.0, Math.pow(d / maxD, 1.6));
@@ -492,30 +530,28 @@
         char = (Math.floor(h) & 1) === 0 ? '=' : '|';
       }
 
-      // Apply light & distance fog
       r = Math.floor(r * light);
       g = Math.floor(g * light);
       b = Math.floor(b * light);
 
-      r = Math.floor(r * (1.0 - fog) + 5.0 * fog);
-      g = Math.floor(g * (1.0 - fog) + 7.0 * fog);
-      b = Math.floor(b * (1.0 - fog) + 17.0 * fog);
+      // Depth Atmosphere fog blending
+      r = Math.floor(r * (1.0 - fog) + 3.0 * fog);
+      g = Math.floor(g * (1.0 - fog) + 5.0 * fog);
+      b = Math.floor(b * (1.0 - fog) + 12.0 * fog);
 
-      if (fog > 0.8) char = '░';
-      if (fog > 0.94) char = '.';
+      if (fog > 0.82) char = '░';
+      if (fog > 0.95) char = '.';
 
-      // Reticle targeting wireframe glow
       if (isTargeted) {
         char = '█';
-        r = Math.min(255, r + 90);
-        g = Math.min(255, g + 90);
-        b = Math.min(255, b + 40);
+        r = Math.min(255, r + 95);
+        g = Math.min(255, g + 95);
+        b = Math.min(255, b + 45);
       }
 
       return { char, color: `rgb(${r},${g},${b})` };
     }
 
-    // 3D Raymarching from eye to determine block in center crosshair
     function updateTargetRaycast() {
       const cosY = Math.cos(player.yaw);
       const sinY = Math.sin(player.yaw);
@@ -549,7 +585,6 @@
         d += 0.35;
       }
 
-      // Update target UI banner
       const infoEl = document.getElementById('target-info');
       if (currentTarget) {
         const matName = (MATERIALS[currentTarget.mat] || {}).name || "Block";
@@ -557,7 +592,7 @@
         infoEl.style.borderColor = "#facc15";
       } else {
         infoEl.textContent = `TARGET: NONE`;
-        infoEl.style.borderColor = "rgba(255, 255, 255, 0.15)";
+        infoEl.style.borderColor = "rgba(253, 224, 71, 0.25)";
       }
     }
 
@@ -568,21 +603,21 @@
       const totalCells = cols * rows;
       for (let i = 0; i < totalCells; i++) {
         charBuffer[i] = ' ';
-        colorBuffer[i] = '#050711';
+        colorBuffer[i] = '#03050c';
       }
 
       for (let c = 0; c < cols; c++) {
         const screenU = (c / (cols - 1)) - 0.5;
-        const rayAngle = player.yaw + screenU * FOV;
+        const rayAngle = player.yaw + screenU * WIDE_FOV;
         const cosA = Math.cos(rayAngle);
         const sinA = Math.sin(rayAngle);
-        const fishEye = Math.cos(screenU * FOV);
+        const fishEye = Math.cos(screenU * WIDE_FOV);
 
         let maxHeight = rows;
         let d = 1.2;
 
         while (d < MAX_RAY_DIST) {
-          const dStep = 0.45 + d * 0.016;
+          const dStep = 0.45 + d * 0.015;
           d += dStep;
 
           const mx = (player.x + cosA * d) & MAP_MASK;
@@ -621,7 +656,7 @@
           }
         }
 
-        // Sky atmosphere & stars
+        // Sky & Celestial Sun
         const sunYaw = Math.atan2(SUN_DIR.y, SUN_DIR.x);
         let dSunYaw = (rayAngle - sunYaw) % (Math.PI * 2);
         if (dSunYaw < -Math.PI) dSunYaw += Math.PI * 2;
@@ -636,7 +671,7 @@
             charBuffer[sIdx] = (y === sunRow && Math.abs(dSunYaw) < 0.05) ? '☼' : '*';
             colorBuffer[sIdx] = '#fef08a';
           } else {
-            const star = (c * 43 + y * 89) % 127;
+            const star = (c * 43 + y * 89) % 137;
             if (y < horizonY - 6 && star === 0) {
               charBuffer[sIdx] = '·';
               colorBuffer[sIdx] = '#64748b';
@@ -647,10 +682,10 @@
     }
 
     /* ==========================================================================
-       6. TEXT BATCHED CANVAS RENDER PIPELINE
+       6. BATCHED CANVAS RENDER LOOP
        ========================================================================== */
     function renderBufferToScreen() {
-      ctx.fillStyle = '#050711';
+      ctx.fillStyle = '#03050c';
       ctx.fillRect(0, 0, screenW, screenH);
 
       const fontSize = Math.floor(cellH * 0.95);
@@ -668,12 +703,12 @@
         for (let c = 0; c < cols; c++) {
           const idx = rowOffset + c;
           const char = charBuffer[idx] || ' ';
-          const color = colorBuffer[idx] || '#050711';
+          const color = colorBuffer[idx] || '#03050c';
 
           if (color === curColor) {
             batch += char;
           } else {
-            if (batch.length > 0 && curColor !== '#050711') {
+            if (batch.length > 0 && curColor !== '#03050c') {
               ctx.fillStyle = curColor;
               ctx.fillText(batch, startCol * cellW, yPos);
             }
@@ -683,7 +718,7 @@
           }
         }
 
-        if (batch.length > 0 && curColor !== '#050711') {
+        if (batch.length > 0 && curColor !== '#03050c') {
           ctx.fillStyle = curColor;
           ctx.fillText(batch, startCol * cellW, yPos);
         }
@@ -691,20 +726,16 @@
     }
 
     /* ==========================================================================
-       7. MINING & BUILDING VOXEL LOGIC
+       7. MINING, BUILDING & VOXEL MODIFICATIONS
        ========================================================================== */
     function mineBlock() {
       if (!currentTarget) return;
       const idx = currentTarget.y * MAP_SIZE + currentTarget.x;
-      const currentH = heightMap[idx];
+      heightMap[idx] = Math.max(0, heightMap[idx] - 2.5);
 
-      // Lower terrain column elevation
-      heightMap[idx] = Math.max(0, currentH - 2.5);
-
-      // Revealing underground stone or water strata
       if (heightMap[idx] < WATER_LEVEL) {
         materialMap[idx] = MAT_WATER;
-      } else if (heightMap[idx] < 68.0) {
+      } else if (heightMap[idx] < 70.0) {
         materialMap[idx] = MAT_DIRT;
       } else {
         materialMap[idx] = MAT_STONE;
@@ -715,7 +746,6 @@
     function buildBlock() {
       if (!currentTarget) return;
       const idx = currentTarget.y * MAP_SIZE + currentTarget.x;
-      // Stack blocks upward at target coordinate
       heightMap[idx] += 2.5;
       materialMap[idx] = selectedMat;
       updateTargetRaycast();
@@ -723,17 +753,105 @@
 
     function triggerJump() {
       if (player.isGrounded) {
-        player.vz = 24.0;
+        player.vz = 26.0;
         player.isGrounded = false;
       }
     }
 
     /* ==========================================================================
-       8. CONTROLS, INPUT & TOUCH GESTURES
+       8. REAL-TIME TACTICAL ASCII RADAR MINIMAP
        ========================================================================== */
-    const keys = {};
-    const input = { moveX: 0, moveY: 0 };
+    const minimapCard = document.getElementById('minimap-card');
+    function updateMinimap() {
+      const radius = 5;
+      const px = Math.floor(player.x);
+      const py = Math.floor(player.y);
+      let out = "RADAR 1024\n";
 
+      for (let dy = -radius; dy <= radius; dy++) {
+        let line = "";
+        for (let dx = -radius; dx <= radius; dx++) {
+          if (dx === 0 && dy === 0) {
+            // Player orientation indicator
+            const deg = ((player.yaw * 180 / Math.PI) % 360 + 360) % 360;
+            line += (deg >= 45 && deg < 135) ? "v" :
+                    (deg >= 135 && deg < 225) ? "<" :
+                    (deg >= 225 && deg < 315) ? "^" : ">";
+            continue;
+          }
+          const sx = (px + dx * 10) & MAP_MASK;
+          const sy = (py + dy * 10) & MAP_MASK;
+          const h = heightMap[sy * MAP_SIZE + sx];
+          const m = materialMap[sy * MAP_SIZE + sx];
+
+          if (m === MAT_LIGHT) line += "☼";
+          else if (m === MAT_BRICK) line += "■";
+          else if (m === MAT_WOOD || m === MAT_LEAF) line += "♣";
+          else if (h < WATER_LEVEL) line += "~";
+          else if (h > 115) line += "^";
+          else line += ".";
+        }
+        out += line + "\n";
+      }
+      minimapCard.textContent = out.trimEnd();
+    }
+
+    /* ==========================================================================
+       9. RESPONSIVE NAVIGATION BUTTONS & DUAL INPUT ENGINE
+       ========================================================================== */
+    const navState = {
+      Forward: false,
+      Backward: false,
+      StrafeLeft: false,
+      StrafeRight: false,
+      TurnLeft: false,
+      TurnRight: false,
+      LookUp: false,
+      LookDown: false
+    };
+
+    // Attach pointer listeners to on-screen navigation buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      const key = btn.getAttribute('data-key');
+
+      function startPress(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        navState[key] = true;
+        btn.classList.add('active');
+      }
+
+      function endPress(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        navState[key] = false;
+        btn.classList.remove('active');
+      }
+
+      btn.addEventListener('pointerdown', startPress);
+      btn.addEventListener('pointerup', endPress);
+      btn.addEventListener('pointercancel', endPress);
+      btn.addEventListener('pointerleave', endPress);
+    });
+
+    // Action button listeners
+    const btnMine = document.getElementById('btn-mine');
+    const btnBuild = document.getElementById('btn-build');
+    const btnJump = document.getElementById('btn-jump');
+
+    function bindAction(elem, actionFn) {
+      elem.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        actionFn();
+      });
+    }
+    bindAction(btnMine, mineBlock);
+    bindAction(btnBuild, buildBlock);
+    bindAction(btnJump, triggerJump);
+
+    // Keyboard Fallback
+    const keys = {};
     window.addEventListener('keydown', (e) => {
       keys[e.code] = true;
       if (e.code === 'Digit1') setHotbarSlot(0);
@@ -748,7 +866,7 @@
     });
     window.addEventListener('keyup', (e) => { keys[e.code] = false; });
 
-    // Desktop Mouse Handling
+    // Desktop Mouse Drag Look & Clicks
     canvas.addEventListener('mousedown', (e) => {
       if (e.button === 0) mineBlock();
       if (e.button === 2) buildBlock();
@@ -759,8 +877,7 @@
     let lastMouseX = 0, lastMouseY = 0;
     canvas.addEventListener('mousedown', (e) => {
       isMouseDragging = true;
-      lastMouseX = e.clientX;
-      lastMouseY = e.clientY;
+      lastMouseX = e.clientX; lastMouseY = e.clientY;
     });
     window.addEventListener('mouseup', () => { isMouseDragging = false; });
     window.addEventListener('mousemove', (e) => {
@@ -769,29 +886,19 @@
       const dy = e.clientY - lastMouseY;
       player.yaw += dx * 0.005;
       player.pitch = Math.max(-0.45, Math.min(0.45, player.pitch - dy * 0.0035));
-      lastMouseX = e.clientX;
-      lastMouseY = e.clientY;
+      lastMouseX = e.clientX; lastMouseY = e.clientY;
     });
 
-    // Touch Virtual Joystick & Camera Look Surface
-    let joyId = null, joyBaseX = 0, joyBaseY = 0, joyKnobX = 0, joyKnobY = 0;
-    let lookId = null, lookLastX = 0, lookLastY = 0;
-    const JOY_RADIUS = 50.0;
-
+    // Touch Screen Swipe-to-Look on game canvas
+    let activeTouchId = null;
+    let touchStartX = 0, touchStartY = 0;
     canvas.addEventListener('touchstart', (e) => {
       e.preventDefault();
-      const halfW = window.innerWidth * 0.5;
-
-      for (let i = 0; i < e.changedTouches.length; i++) {
-        const t = e.changedTouches[i];
-        if (t.clientX < halfW && joyId === null) {
-          joyId = t.identifier;
-          joyBaseX = t.clientX; joyBaseY = t.clientY;
-          joyKnobX = t.clientX; joyKnobY = t.clientY;
-        } else if (t.clientX >= halfW && lookId === null) {
-          lookId = t.identifier;
-          lookLastX = t.clientX; lookLastY = t.clientY;
-        }
+      if (activeTouchId === null && e.changedTouches.length > 0) {
+        const t = e.changedTouches[0];
+        activeTouchId = t.identifier;
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
       }
     }, { passive: false });
 
@@ -799,58 +906,28 @@
       e.preventDefault();
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
-        if (t.identifier === joyId) {
-          const dx = t.clientX - joyBaseX;
-          const dy = t.clientY - joyBaseY;
-          const dist = Math.hypot(dx, dy);
-          if (dist > JOY_RADIUS) {
-            joyKnobX = joyBaseX + (dx / dist) * JOY_RADIUS;
-            joyKnobY = joyBaseY + (dy / dist) * JOY_RADIUS;
-          } else {
-            joyKnobX = t.clientX;
-            joyKnobY = t.clientY;
-          }
-          input.moveX = (joyKnobX - joyBaseX) / JOY_RADIUS;
-          input.moveY = -(joyKnobY - joyBaseY) / JOY_RADIUS;
-        } else if (t.identifier === lookId) {
-          const dx = t.clientX - lookLastX;
-          const dy = t.clientY - lookLastY;
-          player.yaw += dx * 0.0065;
-          player.pitch = Math.max(-0.45, Math.min(0.45, player.pitch - dy * 0.0045));
-          lookLastX = t.clientX;
-          lookLastY = t.clientY;
+        if (t.identifier === activeTouchId) {
+          const dx = t.clientX - touchStartX;
+          const dy = t.clientY - touchStartY;
+          player.yaw += dx * 0.007;
+          player.pitch = Math.max(-0.45, Math.min(0.45, player.pitch - dy * 0.005));
+          touchStartX = t.clientX;
+          touchStartY = t.clientY;
         }
       }
     }, { passive: false });
 
     function handleTouchEnd(e) {
-      e.preventDefault();
       for (let i = 0; i < e.changedTouches.length; i++) {
-        const t = e.changedTouches[i];
-        if (t.identifier === joyId) {
-          joyId = null;
-          input.moveX = 0; input.moveY = 0;
-        } else if (t.identifier === lookId) {
-          lookId = null;
+        if (e.changedTouches[i].identifier === activeTouchId) {
+          activeTouchId = null;
         }
       }
     }
     canvas.addEventListener('touchend', handleTouchEnd, { passive: false });
     canvas.addEventListener('touchcancel', handleTouchEnd, { passive: false });
 
-    // Action button listeners
-    const btnMine = document.getElementById('btn-mine');
-    const btnBuild = document.getElementById('btn-build');
-    const btnJump = document.getElementById('btn-jump');
-
-    btnMine.addEventListener('touchstart', (e) => { e.stopPropagation(); mineBlock(); });
-    btnBuild.addEventListener('touchstart', (e) => { e.stopPropagation(); buildBlock(); });
-    btnJump.addEventListener('touchstart', (e) => { e.stopPropagation(); triggerJump(); });
-    btnMine.addEventListener('click', mineBlock);
-    btnBuild.addEventListener('click', buildBlock);
-    btnJump.addEventListener('click', triggerJump);
-
-    // Hotbar click selection
+    // Hotbar selector
     const slots = document.querySelectorAll('.hotbar-slot');
     function setHotbarSlot(idx) {
       slots.forEach((s, i) => {
@@ -863,44 +940,39 @@
       });
     }
     slots.forEach((s, idx) => {
-      s.addEventListener('click', (e) => { e.stopPropagation(); setHotbarSlot(idx); });
-      s.addEventListener('touchstart', (e) => { e.stopPropagation(); setHotbarSlot(idx); });
+      s.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        setHotbarSlot(idx);
+      });
     });
 
-    function drawTouchJoystick() {
-      if (joyId === null) return;
-      ctx.save();
-      ctx.lineWidth = 2.5;
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.25)';
-      ctx.beginPath();
-      ctx.arc(joyBaseX, joyBaseY, JOY_RADIUS, 0, Math.PI * 2);
-      ctx.stroke();
-
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
-      ctx.beginPath();
-      ctx.arc(joyKnobX, joyKnobY, 18, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.restore();
-    }
-
     /* ==========================================================================
-       9. PHYSICS, COLLISION & SIMULATION LOOP
+       10. PHYSICS, SIMULATION & GAME LOOP
        ========================================================================== */
     function updatePhysics(dt) {
-      if (joyId === null) {
-        input.moveX = 0; input.moveY = 0;
-        if (keys['KeyW'] || keys['ArrowUp']) input.moveY += 1.0;
-        if (keys['KeyS'] || keys['ArrowDown']) input.moveY -= 1.0;
-        if (keys['KeyA']) input.moveX -= 1.0;
-        if (keys['KeyD']) input.moveX += 1.0;
-        if (keys['ArrowLeft']) player.yaw -= 2.0 * dt;
-        if (keys['ArrowRight']) player.yaw += 2.0 * dt;
-      }
+      let moveX = 0, moveY = 0;
 
-      let mx = input.moveX;
-      let my = input.moveY;
-      const mag = Math.hypot(mx, my);
-      if (mag > 1.0) { mx /= mag; my /= mag; }
+      // Check on-screen navigation buttons
+      if (navState.Forward) moveY += 1.0;
+      if (navState.Backward) moveY -= 1.0;
+      if (navState.StrafeLeft) moveX -= 1.0;
+      if (navState.StrafeRight) moveX += 1.0;
+
+      if (navState.TurnLeft) player.yaw -= 2.2 * dt;
+      if (navState.TurnRight) player.yaw += 2.2 * dt;
+      if (navState.LookUp) player.pitch = Math.min(0.45, player.pitch + 1.2 * dt);
+      if (navState.LookDown) player.pitch = Math.max(-0.45, player.pitch - 1.2 * dt);
+
+      // Check Keyboard Fallbacks
+      if (keys['KeyW'] || keys['ArrowUp']) moveY += 1.0;
+      if (keys['KeyS'] || keys['ArrowDown']) moveY -= 1.0;
+      if (keys['KeyA']) moveX -= 1.0;
+      if (keys['KeyD']) moveX += 1.0;
+      if (keys['ArrowLeft']) player.yaw -= 2.0 * dt;
+      if (keys['ArrowRight']) player.yaw += 2.0 * dt;
+
+      const mag = Math.hypot(moveX, moveY);
+      if (mag > 1.0) { moveX /= mag; moveY /= mag; }
 
       let moveSpeed = player.speed;
       const curH = sampleTerrain(player.x, player.y);
@@ -909,22 +981,22 @@
       const fX = Math.cos(player.yaw), fY = Math.sin(player.yaw);
       const rX = -Math.sin(player.yaw), rY = Math.cos(player.yaw);
 
-      const vx = (fX * my + rX * mx) * moveSpeed;
-      const vy = (fY * my + rY * mx) * moveSpeed;
+      const vx = (fX * moveY + rX * moveX) * moveSpeed;
+      const vy = (fY * moveY + rY * moveX) * moveSpeed;
 
       const nx = (player.x + vx * dt) & MAP_MASK;
       const ny = (player.y + vy * dt) & MAP_MASK;
       const nextH = sampleTerrain(nx, ny);
 
-      // Block step climbing (up to 3.5 units slope threshold)
+      // Block climbing & wall collision
       if (nextH - curH < 4.0 || !player.isGrounded) {
         player.x = nx;
         player.y = ny;
       }
 
-      // Vertical gravity and jump dynamics
+      // Vertical Gravity & Elevation Dynamics
       const groundZ = Math.max(nextH, WATER_LEVEL) + player.eyeHeight;
-      player.vz -= 68.0 * dt; // Gravity
+      player.vz -= 68.0 * dt;
       player.z += player.vz * dt;
 
       if (player.z <= groundZ) {
@@ -939,7 +1011,7 @@
     }
 
     /* ==========================================================================
-       10. RESIZE & MAIN LOOP
+       11. DYNAMIC SCREEN RESIZING & MAIN LOOP
        ========================================================================== */
     function resizeDisplay() {
       screenW = window.innerWidth;
@@ -947,8 +1019,9 @@
       canvas.width = screenW;
       canvas.height = screenH;
 
-      cols = Math.min(128, Math.max(64, Math.floor(screenW / 9.5)));
-      rows = Math.min(72, Math.max(38, Math.floor(screenH / 15.5)));
+      // Ultra-wide panoramic column ratio
+      cols = Math.min(160, Math.max(72, Math.floor(screenW / 8.5)));
+      rows = Math.min(76, Math.max(40, Math.floor(screenH / 14.5)));
 
       cellW = screenW / cols;
       cellH = screenH / rows;
@@ -958,34 +1031,14 @@
     }
     window.addEventListener('resize', resizeDisplay);
 
-    const hudLeft = document.getElementById('hud-left');
-    const hudCenter = document.getElementById('hud-center');
-    const hudRight = document.getElementById('hud-right');
+    const hudStats = document.getElementById('hud-stats');
+    const hudPos = document.getElementById('hud-pos');
 
     let lastTime = performance.now();
     let frameCount = 0;
     let fpsTimer = 0;
     let fps = 60;
-
-    function updateHUD(dt) {
-      frameCount++;
-      fpsTimer += dt;
-      if (fpsTimer >= 0.5) {
-        fps = Math.round(frameCount / fpsTimer);
-        frameCount = 0;
-        fpsTimer = 0;
-      }
-      hudLeft.textContent = `VOXEL-CRAFT // FPS: ${fps}`;
-
-      const h = sampleTerrain(player.x, player.y);
-      let biome = "HIGHLAND PLAINS";
-      if (h < WATER_LEVEL + 2) biome = "OCEAN COAST";
-      else if (h > 110) biome = "ALPINE PEAKS";
-      else if (materialMap[(player.y & MAP_MASK) * MAP_SIZE + (player.x & MAP_MASK)] === MAT_WOOD) biome = "DENSE TAIGA";
-
-      hudCenter.textContent = `BIOME: ${biome}`;
-      hudRight.textContent = `POS: (${Math.floor(player.x)}, ${Math.floor(player.y)}) | ALT: ${Math.max(0, Math.floor(player.z - WATER_LEVEL))}m`;
-    }
+    let minimapTimer = 0;
 
     function gameLoop(now) {
       const dt = Math.min((now - lastTime) / 1000.0, 0.1);
@@ -994,13 +1047,30 @@
       updatePhysics(dt);
       renderRaycastScene(now * 0.001);
       renderBufferToScreen();
-      drawTouchJoystick();
-      updateHUD(dt);
+
+      // FPS & Radar tick
+      frameCount++;
+      fpsTimer += dt;
+      minimapTimer += dt;
+
+      if (fpsTimer >= 0.5) {
+        fps = Math.round(frameCount / fpsTimer);
+        frameCount = 0;
+        fpsTimer = 0;
+        hudStats.textContent = `WORLD 1024 // FPS: ${fps}`;
+        hudPos.textContent = `POS: (${Math.floor(player.x)}, ${Math.floor(player.y)}) | ALT: ${Math.max(0, Math.floor(player.z - WATER_LEVEL))}m`;
+      }
+
+      if (minimapTimer >= 0.15) {
+        updateMinimap();
+        minimapTimer = 0;
+      }
 
       requestAnimationFrame(gameLoop);
     }
 
-    generateDetailedWorld();
+    // Launch
+    generate1024World();
     resizeDisplay();
     requestAnimationFrame(gameLoop);
   </script>
