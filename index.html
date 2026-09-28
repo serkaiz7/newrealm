@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
-  <title>ASCII Voxel World 1024 // Panoramic Sandbox</title>
+  <title>ASCII Voxel World 1024 // Daylight Sandbox</title>
   <style>
     * {
       box-sizing: border-box;
@@ -20,7 +20,7 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      background-color: #03050c;
+      background-color: #5ea8f5; /* Sunny day atmospheric sky blue */
       touch-action: none;
       position: fixed;
       font-family: 'Courier New', Courier, monospace;
@@ -33,51 +33,58 @@
       touch-action: none;
     }
 
-    /* Top HUD */
+    /* Daytime High-Contrast HUD */
     #hud {
       position: absolute;
       top: 8px;
       left: 10px;
-      color: #93c5fd;
+      color: #0f172a;
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      padding: 4px 8px;
+      border-radius: 6px;
       font-size: 11px;
       font-weight: bold;
       pointer-events: none;
-      text-shadow: 1px 1px 3px #000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
       z-index: 15;
-      line-height: 1.4;
+      line-height: 1.35;
     }
 
-    /* Mini-Radar Overlay */
+    /* Daytime Radar Minimap */
     #minimap-card {
       position: absolute;
       top: 8px;
       right: 10px;
-      background: rgba(3, 7, 18, 0.78);
-      border: 1px solid rgba(147, 197, 253, 0.3);
+      background: rgba(255, 255, 255, 0.85);
+      border: 1.5px solid rgba(15, 23, 42, 0.2);
       padding: 5px 8px;
       border-radius: 6px;
-      color: #38bdf8;
+      color: #0284c7;
       font-size: 9px;
       font-family: monospace;
+      font-weight: bold;
       line-height: 1.05;
       white-space: pre;
       pointer-events: none;
       z-index: 15;
-      text-shadow: 0 0 2px #000;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
 
     #target-info {
       position: absolute;
-      top: 36px;
+      top: 54px;
       left: 10px;
-      color: #fde047;
-      background: rgba(15, 23, 42, 0.7);
-      border: 1px solid rgba(253, 224, 71, 0.25);
+      color: #854d0e;
+      background: rgba(254, 240, 138, 0.9);
+      border: 1px solid rgba(202, 138, 4, 0.5);
       padding: 3px 8px;
       border-radius: 4px;
       font-size: 10px;
+      font-weight: bold;
       pointer-events: none;
       z-index: 15;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
     /* Reticle */
@@ -86,21 +93,21 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      color: rgba(255, 255, 255, 0.85);
+      color: #ffffff;
+      text-shadow: 0 0 3px #000, 0 0 6px rgba(0,0,0,0.8);
       font-size: 18px;
+      font-weight: bold;
       pointer-events: none;
       z-index: 10;
       line-height: 1;
     }
 
-    /* ==========================================================================
-       NAVIGATION & ACTION BUTTON CLUSTERS (Mobile First)
-       ========================================================================== */
+    /* Navigation & Action Buttons (Frosted Dark Glass for Daytime Legibility) */
     .nav-btn {
       width: 46px;
       height: 46px;
-      background: rgba(15, 23, 42, 0.72);
-      border: 1.5px solid rgba(255, 255, 255, 0.28);
+      background: rgba(15, 23, 42, 0.75);
+      border: 1.5px solid rgba(255, 255, 255, 0.45);
       border-radius: 8px;
       color: #f8fafc;
       font-size: 15px;
@@ -110,16 +117,16 @@
       justify-content: center;
       touch-action: none;
       cursor: pointer;
-      box-shadow: 0 3px 8px rgba(0,0,0,0.45);
+      box-shadow: 0 3px 8px rgba(0,0,0,0.35);
       transition: background 0.1s, transform 0.05s;
     }
     .nav-btn:active, .nav-btn.active {
-      background: rgba(56, 189, 248, 0.45);
+      background: rgba(2, 132, 199, 0.85);
       border-color: #38bdf8;
       transform: scale(0.92);
     }
 
-    /* Movement D-Pad (Bottom-Left) */
+    /* D-Pad (Bottom-Left) */
     #dpad-cluster {
       position: absolute;
       bottom: 68px;
@@ -131,7 +138,7 @@
       z-index: 25;
     }
 
-    /* Camera Pan & Tilt Cluster (Bottom-Right) */
+    /* Camera Pan & Tilt (Bottom-Right) */
     #camera-cluster {
       position: absolute;
       bottom: 126px;
@@ -143,7 +150,7 @@
       z-index: 25;
     }
 
-    /* Action Buttons (Mine / Build / Jump) */
+    /* Action Cluster (Mine / Build / Jump) */
     #action-cluster {
       position: absolute;
       bottom: 68px;
@@ -165,17 +172,17 @@
       justify-content: center;
       touch-action: none;
       cursor: pointer;
-      border: 1.5px solid rgba(255, 255, 255, 0.35);
-      box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+      border: 1.5px solid rgba(255, 255, 255, 0.4);
+      box-shadow: 0 3px 10px rgba(0,0,0,0.35);
     }
     .action-btn:active {
       transform: scale(0.93);
     }
-    #btn-mine { background: rgba(220, 38, 38, 0.65); border-color: #ef4444; }
-    #btn-build { background: rgba(16, 185, 129, 0.65); border-color: #10b981; }
-    #btn-jump { background: rgba(37, 99, 235, 0.65); border-color: #3b82f6; }
+    #btn-mine { background: rgba(220, 38, 38, 0.8); border-color: #f87171; }
+    #btn-build { background: rgba(16, 185, 129, 0.8); border-color: #34d399; }
+    #btn-jump { background: rgba(2, 132, 199, 0.8); border-color: #60a5fa; }
 
-    /* Hotbar (Bottom Center) */
+    /* Daytime Hotbar */
     #hotbar {
       position: absolute;
       bottom: 10px;
@@ -183,11 +190,12 @@
       transform: translateX(-50%);
       display: flex;
       gap: 5px;
-      background: rgba(15, 23, 42, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.22);
+      background: rgba(15, 23, 42, 0.82);
+      border: 1.5px solid rgba(255, 255, 255, 0.35);
       padding: 4px;
       border-radius: 8px;
       z-index: 25;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
     .hotbar-slot {
       width: 42px;
@@ -196,17 +204,18 @@
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.08);
       border: 2px solid transparent;
       border-radius: 5px;
-      color: #cbd5e1;
+      color: #e2e8f0;
       font-size: 8px;
+      font-weight: bold;
       cursor: pointer;
       touch-action: manipulation;
     }
     .hotbar-slot.active {
       border-color: #facc15;
-      background: rgba(250, 204, 21, 0.2);
+      background: rgba(250, 204, 21, 0.28);
       color: #fff;
     }
     .hotbar-char {
@@ -219,7 +228,7 @@
 <body>
   <!-- HUD & Realtime Minimap -->
   <div id="hud">
-    <div id="hud-stats">WORLD 1024 // FPS: --</div>
+    <div id="hud-stats">DAYLIGHT 1024 // FPS: --</div>
     <div id="hud-pos">POS: (0, 0) | ALT: 0m</div>
   </div>
   <div id="minimap-card">RADAR
@@ -227,7 +236,7 @@
   <div id="target-info">TARGET: NONE</div>
   <div id="reticle">+</div>
 
-  <!-- Directional Navigation Cluster (Left) -->
+  <!-- Directional D-Pad Cluster (Left) -->
   <div id="dpad-cluster">
     <div></div>
     <div class="nav-btn" data-key="Forward" title="Forward">▲</div>
@@ -237,7 +246,7 @@
     <div class="nav-btn" data-key="StrafeRight" title="Strafe Right">▶</div>
   </div>
 
-  <!-- Camera Turn/Tilt Cluster (Right Above Actions) -->
+  <!-- Camera Turn/Tilt Cluster (Right) -->
   <div id="camera-cluster">
     <div class="nav-btn" data-key="LookUp" title="Look Up">⤒</div>
     <div></div>
@@ -254,13 +263,13 @@
     <div id="btn-build" class="action-btn"><span>🧱</span>BUILD</div>
   </div>
 
-  <!-- Hotbar -->
+  <!-- Block Hotbar -->
   <div id="hotbar">
-    <div class="hotbar-slot active" data-mat="3"><span class="hotbar-char" style="color:#94a3b8">#</span>STONE<span style="font-size:7px">[1]</span></div>
-    <div class="hotbar-slot" data-mat="4"><span class="hotbar-char" style="color:#b45309">=</span>WOOD<span style="font-size:7px">[2]</span></div>
-    <div class="hotbar-slot" data-mat="6"><span class="hotbar-char" style="color:#ef4444">■</span>BRICK<span style="font-size:7px">[3]</span></div>
-    <div class="hotbar-slot" data-mat="5"><span class="hotbar-char" style="color:#22c55e">*</span>LEAF<span style="font-size:7px">[4]</span></div>
-    <div class="hotbar-slot" data-mat="2"><span class="hotbar-char" style="color:#84cc16">w</span>GRASS<span style="font-size:7px">[5]</span></div>
+    <div class="hotbar-slot active" data-mat="3"><span class="hotbar-char" style="color:#cbd5e1">#</span>STONE<span style="font-size:7px">[1]</span></div>
+    <div class="hotbar-slot" data-mat="4"><span class="hotbar-char" style="color:#f59e0b">=</span>WOOD<span style="font-size:7px">[2]</span></div>
+    <div class="hotbar-slot" data-mat="6"><span class="hotbar-char" style="color:#f87171">■</span>BRICK<span style="font-size:7px">[3]</span></div>
+    <div class="hotbar-slot" data-mat="5"><span class="hotbar-char" style="color:#4ade80">*</span>LEAF<span style="font-size:7px">[4]</span></div>
+    <div class="hotbar-slot" data-mat="2"><span class="hotbar-char" style="color:#a3e635">w</span>GRASS<span style="font-size:7px">[5]</span></div>
     <div class="hotbar-slot" data-mat="7"><span class="hotbar-char" style="color:#fde047">☼</span>LIGHT<span style="font-size:7px">[6]</span></div>
   </div>
 
@@ -268,16 +277,25 @@
 
   <script>
     /* ==========================================================================
-       1. EXPANDED WORLD (1024x1024) & PANORAMIC FOV CONSTANTS
+       1. DAYLIGHT & PANORAMIC WORLD CONSTANTS
        ========================================================================== */
-    const MAP_SIZE = 1024;            // 1,048,576 voxels
-    const MAP_MASK = MAP_SIZE - 1;    // Bitwise mask for seamless world wrapping
+    const MAP_SIZE = 1024;
+    const MAP_MASK = MAP_SIZE - 1;
     const WATER_LEVEL = 30.0;
-    const WIDE_FOV = 1.48;            // ~85° Ultra-wide panoramic lens
-    const MAX_RAY_DIST = 320.0;       // Extended view horizon
+    const WIDE_FOV = 1.48;             // ~85° Ultra-wide panoramic lens
+    const MAX_RAY_DIST = 320.0;
     const REACH_DISTANCE = 18.0;
 
-    // Material IDs
+    // Daytime Atmospheric Palette:
+    // Sky blue zenith blends into soft warm white-cyan horizon fog
+    const SKY_ZENITH = [65, 145, 245];   // Vibrant high sky
+    const SKY_HORIZON = [185, 220, 252]; // Sunlit horizon haze
+    const DAY_FOG = [175, 215, 250];     // Aerial distance perspective fog
+
+    // High midday sun: Warm direct lighting from overhead South-West
+    const SUN_DIR = normalizeVector({ x: -0.38, y: -0.48, z: 0.78 });
+
+    // Voxel Material IDs
     const MAT_WATER = 0;
     const MAT_DIRT  = 1;
     const MAT_GRASS = 2;
@@ -289,20 +307,19 @@
     const MAT_SAND  = 8;
     const MAT_SNOW  = 9;
 
+    // Daytime Material Palettes: Rich, saturated sunlit tones
     const MATERIALS = {
-      [MAT_WATER]: { name: "Water",       base: [24, 82, 172],  glyphs: ['~', '≈', '-'] },
-      [MAT_DIRT]:  { name: "Dirt",        base: [125, 84, 48],  glyphs: ['.', ':', '%'] },
-      [MAT_GRASS]: { name: "Grass",       base: [42, 138, 50],  glyphs: ['w', 'v', ',', '.'] },
-      [MAT_STONE]: { name: "Stone",       base: [115, 120, 130],glyphs: ['#', '%', '&'] },
-      [MAT_WOOD]:  { name: "Wood Planks", base: [155, 104, 58], glyphs: ['=', '|', 'H'] },
-      [MAT_LEAF]:  { name: "Leaves",      base: [30, 142, 45],  glyphs: ['*', '@', '%'] },
-      [MAT_BRICK]: { name: "Brick",       base: [175, 68, 55],  glyphs: ['■', '[', ']'] },
-      [MAT_LIGHT]: { name: "Glowstone",   base: [255, 215, 55], glyphs: ['☼', '*', '+'] },
-      [MAT_SAND]:  { name: "Sand",        base: [192, 172, 108],glyphs: [':', '.', '°'] },
-      [MAT_SNOW]:  { name: "Snow Cap",    base: [225, 235, 248],glyphs: ['█', '▓', '▒'] },
+      [MAT_WATER]: { name: "Water",       base: [38, 145, 235],  glyphs: ['~', '≈', '-'] },
+      [MAT_DIRT]:  { name: "Dirt",        base: [155, 102, 60],  glyphs: ['.', ':', '%'] },
+      [MAT_GRASS]: { name: "Grass",       base: [65, 180, 52],   glyphs: ['w', 'v', ',', '.'] },
+      [MAT_STONE]: { name: "Stone",       base: [142, 148, 160], glyphs: ['#', '%', '&'] },
+      [MAT_WOOD]:  { name: "Wood Planks", base: [190, 128, 72],  glyphs: ['=', '|', 'H'] },
+      [MAT_LEAF]:  { name: "Leaves",      base: [45, 175, 52],   glyphs: ['*', '@', '%'] },
+      [MAT_BRICK]: { name: "Brick",       base: [200, 82, 68],   glyphs: ['■', '[', ']'] },
+      [MAT_LIGHT]: { name: "Glowstone",   base: [255, 235, 90],  glyphs: ['☼', '*', '+'] },
+      [MAT_SAND]:  { name: "Sand",        base: [240, 215, 140], glyphs: [':', '.', '°'] },
+      [MAT_SNOW]:  { name: "Snow Cap",    base: [248, 252, 255], glyphs: ['█', '▓', '▒'] },
     };
-
-    const SUN_DIR = normalizeVector({ x: -0.58, y: -0.60, z: 0.55 });
 
     /* ==========================================================================
        2. CANVAS & TEXT BUFFER PIPELINE
@@ -332,7 +349,7 @@
     let currentTarget = null;
 
     /* ==========================================================================
-       3. PROCEDURAL CONTINENTS, FORESTS, SHRINES & RUINS
+       3. PROCEDURAL WORLD GENERATION (1024x1024)
        ========================================================================== */
     const heightMap   = new Float32Array(MAP_SIZE * MAP_SIZE);
     const materialMap = new Uint8Array(MAP_SIZE * MAP_SIZE);
@@ -371,19 +388,18 @@
     function generate1024World() {
       const noise = createNoise2D(888);
 
-      // Phase 1: Mega-scale continental elevation & multi-octave geology
       for (let y = 0; y < MAP_SIZE; y++) {
         const row = y * MAP_SIZE;
         for (let x = 0; x < MAP_SIZE; x++) {
           let h = 0;
-          h += noise(x * 0.002, y * 0.002) * 95.0;  // Continental shelves
-          h += noise(x * 0.006, y * 0.006) * 44.0;  // Mountain ranges
-          h += noise(x * 0.018, y * 0.018) * 18.0;  // Foothills
-          h += noise(x * 0.050, y * 0.050) * 5.0;   // Surface boulders
+          h += noise(x * 0.002, y * 0.002) * 95.0;  // Continents
+          h += noise(x * 0.006, y * 0.006) * 44.0;  // Hills
+          h += noise(x * 0.018, y * 0.018) * 18.0;  // Crags
+          h += noise(x * 0.050, y * 0.050) * 5.0;   // Bumps
           h += 50.0;
 
           if (h > 78.0) {
-            h += Math.pow((h - 78.0) * 0.038, 2.3) * 42.0; // Steep alpine peaks
+            h += Math.pow((h - 78.0) * 0.038, 2.3) * 42.0;
           }
 
           const idx = row + x;
@@ -403,7 +419,7 @@
         }
       }
 
-      // Phase 2: Massive Forest Biomes across 1024 grid
+      // Procedural Sunlit Forest Groves
       for (let cy = 32; cy < MAP_SIZE - 32; cy += 14) {
         for (let cx = 32; cx < MAP_SIZE - 32; cx += 14) {
           const jx = (cx + (Math.sin(cy * 4.3) * 5.5 + 6.0)) | 0;
@@ -432,7 +448,7 @@
         }
       }
 
-      // Phase 3: Distributed Fortresses & Ancient Temples across continents
+      // Sunlit Ancient Ruins & Temples
       const landmarks = [
         { x: 380, y: 360, r: 10, wallH: 10 },
         { x: 680, y: 440, r: 12, wallH: 12 },
@@ -459,13 +475,12 @@
             }
           }
         }
-        // Center Beacon Tower
         const cidx = ruin.y * MAP_SIZE + ruin.x;
         heightMap[cidx] = floorH + ruin.wallH + 4.0;
         materialMap[cidx] = MAT_LIGHT;
       });
 
-      // Find highland meadow spawn
+      // Spawn in a sunlit highland valley
       for (let y = 400; y < 650; y += 4) {
         for (let x = 400; x < 650; x += 4) {
           const h = heightMap[y * MAP_SIZE + x];
@@ -490,11 +505,11 @@
     }
 
     /* ==========================================================================
-       4. DYNAMIC SLOPE LIGHTING ENGINE
+       4. DAYLIGHT DIRECTIONAL & AMBIENT LIGHTING
        ========================================================================== */
-    function computeLighting(mx, my, isWater, mat) {
-      if (isWater) return 0.88;
-      if (mat === MAT_LIGHT) return 1.6;
+    function computeDayLighting(mx, my, isWater, mat) {
+      if (isWater) return 0.95;
+      if (mat === MAT_LIGHT) return 1.4;
 
       const x = mx & MAP_MASK;
       const y = my & MAP_MASK;
@@ -508,15 +523,18 @@
       const dy = (hD - hU) * 0.5;
       const len = Math.hypot(dx, dy, 1.0);
 
+      // Dot product with midday sun
       const dot = (-dx / len) * SUN_DIR.x + (-dy / len) * SUN_DIR.y + (1.0 / len) * SUN_DIR.z;
-      return Math.max(0.18, Math.min(1.0, dot * 0.65 + 0.45));
+      // High ambient baseline (0.45) ensures soft illuminated shadows in daylight
+      return Math.max(0.42, Math.min(1.15, dot * 0.58 + 0.48));
     }
 
     /* ==========================================================================
-       5. PANORAMIC VOXEL RAYCASTER & TARGETING
+       5. DAYTIME PANORAMIC RAYCASTER, SKY & CLOUDS
        ========================================================================== */
-    function getVoxelVisual(h, d, maxD, light, mat, isWater, animTime, isTargeted) {
-      const fog = Math.min(1.0, Math.pow(d / maxD, 1.6));
+    function getDaytimeVoxelVisual(h, d, maxD, light, mat, isWater, animTime, isTargeted) {
+      // Atmospheric aerial haze perspective
+      const fog = Math.min(1.0, Math.pow(d / maxD, 1.35));
       const def = MATERIALS[mat] || MATERIALS[MAT_STONE];
       let char = def.glyphs[0];
       let [r, g, b] = def.base;
@@ -525,28 +543,29 @@
         const wave = Math.sin(animTime * 3.5 + d * 0.35);
         char = wave > 0.3 ? '~' : (wave > -0.3 ? '≈' : '-');
       } else if (mat === MAT_GRASS) {
-        char = light > 0.6 ? 'w' : (light > 0.35 ? 'v' : '.');
+        char = light > 0.75 ? 'w' : (light > 0.55 ? 'v' : '.');
       } else if (mat === MAT_WOOD) {
         char = (Math.floor(h) & 1) === 0 ? '=' : '|';
       }
 
-      r = Math.floor(r * light);
-      g = Math.floor(g * light);
-      b = Math.floor(b * light);
+      // Direct warm sunlight multiplication
+      r = Math.min(255, Math.floor(r * light));
+      g = Math.min(255, Math.floor(g * light));
+      b = Math.min(255, Math.floor(b * light));
 
-      // Depth Atmosphere fog blending
-      r = Math.floor(r * (1.0 - fog) + 3.0 * fog);
-      g = Math.floor(g * (1.0 - fog) + 5.0 * fog);
-      b = Math.floor(b * (1.0 - fog) + 12.0 * fog);
+      // Daytime Aerial Perspective: Distant peaks blend into bright sky horizon
+      r = Math.floor(r * (1.0 - fog) + DAY_FOG[0] * fog);
+      g = Math.floor(g * (1.0 - fog) + DAY_FOG[1] * fog);
+      b = Math.floor(b * (1.0 - fog) + DAY_FOG[2] * fog);
 
-      if (fog > 0.82) char = '░';
-      if (fog > 0.95) char = '.';
+      if (fog > 0.85) char = '░';
+      if (fog > 0.96) char = '.';
 
       if (isTargeted) {
         char = '█';
-        r = Math.min(255, r + 95);
-        g = Math.min(255, g + 95);
-        b = Math.min(255, b + 45);
+        r = Math.min(255, r + 90);
+        g = Math.min(255, g + 80);
+        b = Math.min(255, b + 20);
       }
 
       return { char, color: `rgb(${r},${g},${b})` };
@@ -589,10 +608,11 @@
       if (currentTarget) {
         const matName = (MATERIALS[currentTarget.mat] || {}).name || "Block";
         infoEl.textContent = `TARGET: [ ${matName.toUpperCase()} ] @ (${currentTarget.x}, ${currentTarget.y}) DIST: ${currentTarget.dist.toFixed(1)}m`;
-        infoEl.style.borderColor = "#facc15";
+        infoEl.style.borderColor = "#ca8a04";
+        infoEl.style.display = "block";
       } else {
         infoEl.textContent = `TARGET: NONE`;
-        infoEl.style.borderColor = "rgba(253, 224, 71, 0.25)";
+        infoEl.style.borderColor = "rgba(202, 138, 4, 0.3)";
       }
     }
 
@@ -603,7 +623,7 @@
       const totalCells = cols * rows;
       for (let i = 0; i < totalCells; i++) {
         charBuffer[i] = ' ';
-        colorBuffer[i] = '#03050c';
+        colorBuffer[i] = '#5ea8f5';
       }
 
       for (let c = 0; c < cols; c++) {
@@ -642,8 +662,8 @@
 
             if (yStart < yEnd) {
               const isTargeted = currentTarget && currentTarget.x === mx && currentTarget.y === my;
-              const light = computeLighting(mx, my, isWater, mat);
-              const visual = getVoxelVisual(h, d, MAX_RAY_DIST, light, mat, isWater, time, isTargeted);
+              const light = computeDayLighting(mx, my, isWater, mat);
+              const visual = getDaytimeVoxelVisual(h, d, MAX_RAY_DIST, light, mat, isWater, time, isTargeted);
 
               for (let y = yStart; y < yEnd; y++) {
                 const cellIdx = y * cols + c;
@@ -656,26 +676,53 @@
           }
         }
 
-        // Sky & Celestial Sun
+        // ======================================================================
+        // DAYTIME SKY, GOLDEN SUN & PROCEDURAL DRIFTING CUMULUS CLOUDS
+        // ======================================================================
         const sunYaw = Math.atan2(SUN_DIR.y, SUN_DIR.x);
         let dSunYaw = (rayAngle - sunYaw) % (Math.PI * 2);
         if (dSunYaw < -Math.PI) dSunYaw += Math.PI * 2;
         if (dSunYaw > Math.PI) dSunYaw -= Math.PI * 2;
 
-        const isNearSun = Math.abs(dSunYaw) < 0.13;
+        const isNearSun = Math.abs(dSunYaw) < 0.14;
         const sunRow = Math.floor(horizonY - SUN_DIR.z * rows * 0.85);
 
         for (let y = 0; y < Math.min(rows, maxHeight); y++) {
           const sIdx = y * cols + c;
-          if (isNearSun && Math.abs(y - sunRow) < 2) {
-            charBuffer[sIdx] = (y === sunRow && Math.abs(dSunYaw) < 0.05) ? '☼' : '*';
-            colorBuffer[sIdx] = '#fef08a';
-          } else {
-            const star = (c * 43 + y * 89) % 137;
-            if (y < horizonY - 6 && star === 0) {
-              charBuffer[sIdx] = '·';
-              colorBuffer[sIdx] = '#64748b';
+
+          // Sky Zenith-to-Horizon Daytime Gradient
+          const skyT = Math.max(0, Math.min(1.0, y / (horizonY + 0.001)));
+          const sr = Math.floor(SKY_ZENITH[0] * (1.0 - skyT) + SKY_HORIZON[0] * skyT);
+          const sg = Math.floor(SKY_ZENITH[1] * (1.0 - skyT) + SKY_HORIZON[1] * skyT);
+          const sb = Math.floor(SKY_ZENITH[2] * (1.0 - skyT) + SKY_HORIZON[2] * skyT);
+
+          // Brilliant Daytime Sun & Golden Solar Flare
+          if (isNearSun && Math.abs(y - sunRow) < 3) {
+            const distToSun = Math.hypot(dSunYaw * 20.0, y - sunRow);
+            if (distToSun < 1.4) {
+              charBuffer[sIdx] = '☼';
+              colorBuffer[sIdx] = '#ffffff'; // Blinding white sun core
+            } else if (distToSun < 3.2) {
+              charBuffer[sIdx] = '*';
+              colorBuffer[sIdx] = '#fef08a'; // Golden corona
+            } else {
+              charBuffer[sIdx] = '░';
+              colorBuffer[sIdx] = '#fde68a';
             }
+            continue;
+          }
+
+          // Procedural Drifting Clouds (Soft White Fluffy Cumulus)
+          const cloudU = rayAngle * 4.2 + time * 0.04;
+          const cloudV = (y - horizonY) * 0.12;
+          const cloudVal = Math.sin(cloudU) * Math.cos(cloudV * 2.2) + Math.sin(cloudU * 2.1 + cloudV * 3.4) * 0.5;
+
+          if (cloudVal > 0.62 && y < horizonY - 4) {
+            charBuffer[sIdx] = cloudVal > 0.95 ? '█' : (cloudVal > 0.8 ? '▓' : '░');
+            colorBuffer[sIdx] = '#f8fafc'; // Crisp cloud white
+          } else {
+            charBuffer[sIdx] = ' ';
+            colorBuffer[sIdx] = `rgb(${sr},${sg},${sb})`;
           }
         }
       }
@@ -685,7 +732,8 @@
        6. BATCHED CANVAS RENDER LOOP
        ========================================================================== */
     function renderBufferToScreen() {
-      ctx.fillStyle = '#03050c';
+      // Clear with clear daylight sky color
+      ctx.fillStyle = '#5ea8f5';
       ctx.fillRect(0, 0, screenW, screenH);
 
       const fontSize = Math.floor(cellH * 0.95);
@@ -703,12 +751,12 @@
         for (let c = 0; c < cols; c++) {
           const idx = rowOffset + c;
           const char = charBuffer[idx] || ' ';
-          const color = colorBuffer[idx] || '#03050c';
+          const color = colorBuffer[idx] || '#5ea8f5';
 
           if (color === curColor) {
             batch += char;
           } else {
-            if (batch.length > 0 && curColor !== '#03050c') {
+            if (batch.length > 0 && curColor !== '#5ea8f5') {
               ctx.fillStyle = curColor;
               ctx.fillText(batch, startCol * cellW, yPos);
             }
@@ -718,7 +766,7 @@
           }
         }
 
-        if (batch.length > 0 && curColor !== '#03050c') {
+        if (batch.length > 0 && curColor !== '#5ea8f5') {
           ctx.fillStyle = curColor;
           ctx.fillText(batch, startCol * cellW, yPos);
         }
@@ -759,7 +807,7 @@
     }
 
     /* ==========================================================================
-       8. REAL-TIME TACTICAL ASCII RADAR MINIMAP
+       8. DAYTIME TACTICAL ASCII RADAR MINIMAP
        ========================================================================== */
     const minimapCard = document.getElementById('minimap-card');
     function updateMinimap() {
@@ -772,7 +820,6 @@
         let line = "";
         for (let dx = -radius; dx <= radius; dx++) {
           if (dx === 0 && dy === 0) {
-            // Player orientation indicator
             const deg = ((player.yaw * 180 / Math.PI) % 360 + 360) % 360;
             line += (deg >= 45 && deg < 135) ? "v" :
                     (deg >= 135 && deg < 225) ? "<" :
@@ -797,7 +844,7 @@
     }
 
     /* ==========================================================================
-       9. RESPONSIVE NAVIGATION BUTTONS & DUAL INPUT ENGINE
+       9. NAVIGATION BUTTONS & MULTI-INPUT HANDLING
        ========================================================================== */
     const navState = {
       Forward: false,
@@ -810,7 +857,6 @@
       LookDown: false
     };
 
-    // Attach pointer listeners to on-screen navigation buttons
     document.querySelectorAll('.nav-btn').forEach(btn => {
       const key = btn.getAttribute('data-key');
 
@@ -834,7 +880,6 @@
       btn.addEventListener('pointerleave', endPress);
     });
 
-    // Action button listeners
     const btnMine = document.getElementById('btn-mine');
     const btnBuild = document.getElementById('btn-build');
     const btnJump = document.getElementById('btn-jump');
@@ -850,7 +895,7 @@
     bindAction(btnBuild, buildBlock);
     bindAction(btnJump, triggerJump);
 
-    // Keyboard Fallback
+    // Keyboard controls
     const keys = {};
     window.addEventListener('keydown', (e) => {
       keys[e.code] = true;
@@ -889,7 +934,7 @@
       lastMouseX = e.clientX; lastMouseY = e.clientY;
     });
 
-    // Touch Screen Swipe-to-Look on game canvas
+    // Touch Screen Swipe Look
     let activeTouchId = null;
     let touchStartX = 0, touchStartY = 0;
     canvas.addEventListener('touchstart', (e) => {
@@ -952,7 +997,6 @@
     function updatePhysics(dt) {
       let moveX = 0, moveY = 0;
 
-      // Check on-screen navigation buttons
       if (navState.Forward) moveY += 1.0;
       if (navState.Backward) moveY -= 1.0;
       if (navState.StrafeLeft) moveX -= 1.0;
@@ -963,7 +1007,6 @@
       if (navState.LookUp) player.pitch = Math.min(0.45, player.pitch + 1.2 * dt);
       if (navState.LookDown) player.pitch = Math.max(-0.45, player.pitch - 1.2 * dt);
 
-      // Check Keyboard Fallbacks
       if (keys['KeyW'] || keys['ArrowUp']) moveY += 1.0;
       if (keys['KeyS'] || keys['ArrowDown']) moveY -= 1.0;
       if (keys['KeyA']) moveX -= 1.0;
@@ -988,7 +1031,6 @@
       const ny = (player.y + vy * dt) & MAP_MASK;
       const nextH = sampleTerrain(nx, ny);
 
-      // Block climbing & wall collision
       if (nextH - curH < 4.0 || !player.isGrounded) {
         player.x = nx;
         player.y = ny;
@@ -1011,7 +1053,7 @@
     }
 
     /* ==========================================================================
-       11. DYNAMIC SCREEN RESIZING & MAIN LOOP
+       11. RESIZE & ENGINE LOOP
        ========================================================================== */
     function resizeDisplay() {
       screenW = window.innerWidth;
@@ -1019,7 +1061,6 @@
       canvas.width = screenW;
       canvas.height = screenH;
 
-      // Ultra-wide panoramic column ratio
       cols = Math.min(160, Math.max(72, Math.floor(screenW / 8.5)));
       rows = Math.min(76, Math.max(40, Math.floor(screenH / 14.5)));
 
@@ -1048,7 +1089,6 @@
       renderRaycastScene(now * 0.001);
       renderBufferToScreen();
 
-      // FPS & Radar tick
       frameCount++;
       fpsTimer += dt;
       minimapTimer += dt;
@@ -1057,7 +1097,7 @@
         fps = Math.round(frameCount / fpsTimer);
         frameCount = 0;
         fpsTimer = 0;
-        hudStats.textContent = `WORLD 1024 // FPS: ${fps}`;
+        hudStats.textContent = `DAYLIGHT 1024 // FPS: ${fps}`;
         hudPos.textContent = `POS: (${Math.floor(player.x)}, ${Math.floor(player.y)}) | ALT: ${Math.max(0, Math.floor(player.z - WATER_LEVEL))}m`;
       }
 
@@ -1069,7 +1109,6 @@
       requestAnimationFrame(gameLoop);
     }
 
-    // Launch
     generate1024World();
     resizeDisplay();
     requestAnimationFrame(gameLoop);
